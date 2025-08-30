@@ -10,6 +10,7 @@ const EmployeeDashboard = () => {
   const { user } = useSelector((state) => state.auth)
   const [emailAccounts, setEmailAccounts] = useState([])
   const [aiRules, setAiRules] = useState([])
+  const [emails, setEmails] = useState([])
   const [newRule, setNewRule] = useState({
     name: '',
     description: '',
@@ -20,11 +21,14 @@ const EmployeeDashboard = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [oauthData, setOauthData] = useState(null)
+  const [showOauthModal, setShowOauthModal] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
     fetchEmailAccounts()
     fetchAiRules()
+    fetchEmails()
   }, [])
 
   const fetchEmailAccounts = async () => {
@@ -84,6 +88,34 @@ const EmployeeDashboard = () => {
     }
   }
 
+  const fetchEmails = async () => {
+    try {
+      console.log('Fetching emails...')
+      const token = localStorage.getItem('authToken')
+      console.log('Emails - Token exists:', !!token)
+      
+      const response = await fetch(`${ENV.API_BASE_URL}/api/get-emails/`, {
+        headers: {
+          'Authorization': `Token ${token}`
+        }
+      })
+      
+      console.log('Emails - Response status:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Emails - Data:', data)
+        setEmails(data.emails || [])
+      } else {
+        console.log('Emails - Failed with status:', response.status)
+        const errorData = await response.json()
+        console.log('Emails - Error data:', errorData)
+      }
+    } catch (error) {
+      console.error('Failed to fetch emails:', error)
+    }
+  }
+
   const handleLogout = async () => {
     await dispatch(logoutUser())
     navigate('/login')
@@ -91,23 +123,52 @@ const EmployeeDashboard = () => {
 
   const handleConnectEmail = async () => {
     try {
-      // This will redirect to email OAuth for email connection
+      setLoading(true)
+      setError('')
+      
+      // Initiate OAuth flow
       const response = await fetch(`${ENV.API_BASE_URL}/api/connect-email/`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Token ${localStorage.getItem('authToken')}`
-        }
+        },
+        body: JSON.stringify({
+          action: 'oauth_init'
+        })
       })
 
       if (response.ok) {
         const data = await response.json()
-        // Redirect to email OAuth URL
-        window.location.href = data.auth_url
+        // Open OAuth URL in a new window/tab
+        const oauthWindow = window.open(data.auth_url, 'gmail_oauth', 'width=500,height=600')
+        
+        // Listen for OAuth callback
+        const checkOAuthResult = setInterval(() => {
+          try {
+            if (oauthWindow.closed) {
+              clearInterval(checkOAuthResult)
+              // Check if we have OAuth data in localStorage
+              const oauthResult = localStorage.getItem('gmail_oauth_result')
+              if (oauthResult) {
+                const parsedResult = JSON.parse(oauthResult)
+                setOauthData(parsedResult)
+                setShowOauthModal(true)
+                localStorage.removeItem('gmail_oauth_result')
+              }
+            }
+          } catch (error) {
+            clearInterval(checkOAuthResult)
+          }
+        }, 1000)
       } else {
-        setError('Failed to initiate email connection')
+        const errorData = await response.json()
+        setError(errorData.message || 'Failed to initiate email connection')
       }
     } catch (error) {
       setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -156,6 +217,90 @@ const EmployeeDashboard = () => {
       ...newRule,
       [e.target.name]: e.target.value
     })
+  }
+
+  const handleConnectGmailAccount = async () => {
+    if (!oauthData) return
+    
+    try {
+      setLoading(true)
+      setError('')
+      
+      // Connect Gmail account using the OAuth tokens
+      const response = await fetch(`${ENV.API_BASE_URL}/api/connect-email/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          action: 'connect_with_tokens',
+          access_token: oauthData.access_token,
+          refresh_token: oauthData.refresh_token,
+          gmail_email: oauthData.gmail_email
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSuccess(data.message)
+        setShowOauthModal(false)
+        setOauthData(null)
+        // Refresh email accounts
+        fetchEmailAccounts()
+        
+        // Automatically fetch emails after connecting
+        setTimeout(() => {
+          handleFetchEmails(data.email_account_id);
+        }, 1000);
+        
+        // Refresh emails list
+        setTimeout(() => {
+          fetchEmails();
+        }, 2000);
+      } else {
+        const errorData = await response.json()
+        setError(errorData.message || 'Failed to connect Gmail account')
+      }
+    } catch (error) {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFetchEmails = async (emailAccountId) => {
+    try {
+      setLoading(true)
+      setError('')
+      
+      const response = await fetch(`${ENV.API_BASE_URL}/api/fetch-emails/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          email_account_id: emailAccountId
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSuccess(`Emails fetched successfully! ${data.message}`)
+        // Refresh emails list
+        setTimeout(() => {
+          fetchEmails();
+        }, 1000);
+      } else {
+        const errorData = await response.json()
+        setError(errorData.message || 'Failed to fetch emails')
+      }
+    } catch (error) {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const deleteRule = async (ruleId) => {
@@ -278,14 +423,29 @@ const EmployeeDashboard = () => {
                               <p className="text-xs text-gray-600">{account.provider} Account</p>
                             </div>
                     </div>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            account.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                              account.is_active ? 'bg-green-400' : 'bg-red-400'
-                            }`}></span>
-                        {account.is_active ? 'Connected' : 'Disconnected'}
-                      </span>
+                          <div className="flex items-center space-x-2">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              account.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                                account.is_active ? 'bg-green-400' : 'bg-red-400'
+                              }`}></span>
+                              {account.is_active ? 'Connected' : 'Disconnected'}
+                            </span>
+                            {account.is_active && (
+                              <button
+                                onClick={() => handleFetchEmails(account.id)}
+                                disabled={loading}
+                                className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-50"
+                                title="Fetch emails"
+                              >
+                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Fetch
+                              </button>
+                            )}
+                          </div>
                     </div>
                   </div>
                 ))}
@@ -305,7 +465,7 @@ const EmployeeDashboard = () => {
             </div>
           </div>
           
-          {/* Right Column - AI Rules */}
+          {/* Right Column - AI Rules and Emails */}
           <div className="lg:col-span-2 space-y-6">
             {/* Create New AI Rule */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
@@ -568,9 +728,122 @@ const EmployeeDashboard = () => {
             )}
               </div>
             </div>
+
+            {/* Fetched Emails Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center mr-3">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">Fetched Emails</h3>
+                  </div>
+                  <button
+                    onClick={() => fetchEmails()}
+                    disabled={loading}
+                    className="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {loading ? 'Fetching...' : 'Fetch All Emails'}
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                {emails.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">No emails fetched yet</h4>
+                    <p className="text-gray-500">Connect your Gmail account and fetch emails to see them here</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {emails.map((email) => (
+                      <div key={email.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="text-sm font-semibold text-gray-900 mb-1">{email.subject}</h4>
+                            <p className="text-xs text-gray-600 mb-2">From: {email.sender}</p>
+                            <p className="text-xs text-gray-500 mb-2">Received: {new Date(email.received_at).toLocaleString()}</p>
+                            {email.has_attachments && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                📎 Has attachments
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2 ml-4">
+                            {!email.is_read && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                New
+                              </span>
+                            )}
+                            {email.is_starred && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                ⭐ Starred
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </main>
+
+      {/* OAuth Modal */}
+      {showOauthModal && oauthData && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mt-4">Gmail Authorization Successful!</h3>
+              <div className="mt-2 px-7 py-3">
+                <p className="text-sm text-gray-500">
+                  Your Gmail account <strong>{oauthData.gmail_email}</strong> has been authorized successfully.
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Click "Connect Account" to complete the setup and start fetching emails.
+                </p>
+              </div>
+              <div className="items-center px-4 py-3">
+                <button
+                  onClick={handleConnectGmailAccount}
+                  disabled={loading}
+                  className="px-4 py-2 bg-blue-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  {loading ? 'Connecting...' : 'Connect Account'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowOauthModal(false)
+                    setOauthData(null)
+                  }}
+                  className="mt-2 px-4 py-2 bg-gray-300 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
