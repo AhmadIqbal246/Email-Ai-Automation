@@ -4,6 +4,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { logoutUser } from '../../redux/authSlice'
 import InputField from '../../components/reusable/InputField'
 import Navbar from '../../components/mutual/Navbar'
+import EmailModal from '../../components/reusable/EmailModal'
+import EmailList from '../../components/reusable/EmailList'
 import ENV from '../../../config'
 
 const EmployeeDashboard = () => {
@@ -16,6 +18,9 @@ const EmployeeDashboard = () => {
   const [success, setSuccess] = useState('')
   const [oauthData, setOauthData] = useState(null)
   const [showOauthModal, setShowOauthModal] = useState(false)
+  const [selectedEmail, setSelectedEmail] = useState(null)
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [emailContent, setEmailContent] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -226,6 +231,123 @@ const EmployeeDashboard = () => {
     }
   }
 
+  const handleEmailClick = async (email) => {
+    try {
+      setSelectedEmail(email)
+      setLoading(true)
+      setEmailContent('')
+      
+      console.log('Fetching email content for email ID:', email.id)
+      console.log('API URL:', `${ENV.API_BASE_URL}/api/email-content/${email.id}/`)
+      
+      // Fetch full email content
+      const response = await fetch(`${ENV.API_BASE_URL}/api/email-content/${email.id}/`, {
+        headers: {
+          'Authorization': `Token ${localStorage.getItem('authToken')}`
+        }
+      })
+      
+      console.log('Email content response status:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Email content data:', data)
+        setEmailContent(data.content || data.body_html || data.body_plain || 'No content available')
+        
+        // Mark email as read if it wasn't already
+        if (!email.is_read) {
+          await markEmailAsRead(email.id)
+        }
+        
+        setShowEmailModal(true)
+      } else {
+        // Get error details
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
+        console.error('Email content fetch failed:', response.status, errorData)
+        
+        // Fallback - still open modal with basic info
+        setEmailContent(`Email content could not be loaded. Error: ${errorData.message || response.statusText}`)
+        setShowEmailModal(true)
+        
+        // Mark as read anyway
+        if (!email.is_read) {
+          await markEmailAsRead(email.id)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch email content:', error)
+      setEmailContent(`Error loading email content: ${error.message}`)
+      setShowEmailModal(true)
+      
+      // Mark as read anyway
+      if (!email.is_read) {
+        await markEmailAsRead(email.id)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const markEmailAsRead = async (emailId) => {
+    try {
+      const response = await fetch(`${ENV.API_BASE_URL}/api/mark-email-read/${emailId}/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${localStorage.getItem('authToken')}`
+        }
+      })
+      
+      if (response.ok) {
+        // Update local state
+        setEmails(prevEmails => 
+          prevEmails.map(email => 
+            email.id === emailId ? { ...email, is_read: true } : email
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Failed to mark email as read:', error)
+    }
+  }
+
+  const closeEmailModal = () => {
+    setShowEmailModal(false)
+    setSelectedEmail(null)
+    setEmailContent('')
+  }
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      console.log('Marking all emails as read...')
+      
+      const response = await fetch(`${ENV.API_BASE_URL}/api/mark-all-emails-read/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${localStorage.getItem('authToken')}`
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Mark all as read response:', data)
+        
+        // Update local state - mark all emails as read
+        setEmails(prevEmails => 
+          prevEmails.map(email => ({ ...email, is_read: true }))
+        )
+        
+        setSuccess(data.message || 'All emails marked as read successfully!')
+      } else {
+        const errorData = await response.json()
+        console.error('Mark all as read failed:', response.status, errorData)
+        setError(errorData.message || 'Failed to mark all emails as read')
+      }
+    } catch (error) {
+      console.error('Failed to mark all emails as read:', error)
+      setError(`Error marking emails as read: ${error.message}`)
+    }
+  }
+
 
   // Custom action for navbar
   const customActions = (
@@ -253,6 +375,47 @@ const EmployeeDashboard = () => {
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Error and Success Messages */}
+        {error && (
+          <div className="mb-6 p-4 border border-red-300 text-red-700 bg-red-50 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="font-medium">Error:</span>
+              <span className="ml-1">{error}</span>
+              <button 
+                onClick={() => setError('')}
+                className="ml-auto p-1 hover:bg-red-200 rounded-full"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {success && (
+          <div className="mb-6 p-4 border border-green-300 text-green-700 bg-green-50 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="font-medium">Success:</span>
+              <span className="ml-1">{success}</span>
+              <button 
+                onClick={() => setSuccess('')}
+                className="ml-auto p-1 hover:bg-green-200 rounded-full"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Left Column - Email Accounts */}
@@ -354,76 +517,13 @@ const EmployeeDashboard = () => {
           
           {/* Right Column - Emails */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Fetched Emails Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center mr-3">
-                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900">Fetched Emails</h3>
-                  </div>
-                  <button
-                    onClick={() => fetchEmails()}
-                    disabled={loading}
-                    className="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50"
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    {loading ? 'Fetching...' : 'Fetch All Emails'}
-                  </button>
-                </div>
-              </div>
-              
-              <div className="p-6">
-                {emails.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">No emails fetched yet</h4>
-                    <p className="text-gray-500">Connect your Gmail account and fetch emails to see them here</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {emails.map((email) => (
-                      <div key={email.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="text-sm font-semibold text-gray-900 mb-1">{email.subject}</h4>
-                            <p className="text-xs text-gray-600 mb-2">From: {email.sender}</p>
-                            <p className="text-xs text-gray-500 mb-2">Received: {new Date(email.received_at).toLocaleString()}</p>
-                            {email.has_attachments && (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                📎 Has attachments
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-2 ml-4">
-                            {!email.is_read && (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                New
-                              </span>
-                            )}
-                            {email.is_starred && (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                ⭐ Starred
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <EmailList
+              emails={emails}
+              loading={loading}
+              onEmailClick={handleEmailClick}
+              onMarkAllAsRead={handleMarkAllAsRead}
+              onRefresh={fetchEmails}
+            />
           </div>
         </div>
       </main>
@@ -469,6 +569,15 @@ const EmployeeDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Email Modal */}
+      <EmailModal 
+        isOpen={showEmailModal}
+        onClose={closeEmailModal}
+        email={selectedEmail}
+        content={emailContent}
+        loading={loading && showEmailModal}
+      />
     </div>
   )
 }

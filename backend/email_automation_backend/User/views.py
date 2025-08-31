@@ -1108,3 +1108,121 @@ class GetEmailsView(APIView):
             return Response({
                 'message': f'Failed to fetch emails: {str(e)}'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetEmailContentView(APIView):
+    """Get full content of a specific email"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, email_id):
+        try:
+            # Get the email
+            try:
+                email = EmailMessage.objects.select_related('email_account').get(
+                    id=email_id,
+                    email_account__user=request.user
+                )
+            except EmailMessage.DoesNotExist:
+                return Response({
+                    'message': 'Email not found'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Return email content
+            return Response({
+                'id': email.id,
+                'subject': email.subject,
+                'sender': email.sender,
+                'recipients': email.get_recipients_list(),
+                'cc': email.get_cc_list(),
+                'received_at': email.received_at.isoformat(),
+                'is_read': email.is_read,
+                'is_starred': email.is_starred,
+                'has_attachments': email.has_attachments,
+                'body_html': email.body_html,
+                'body_plain': email.body_plain,
+                'content': email.body_html or email.body_plain or 'No content available',
+                'gmail_message_id': email.gmail_message_id,
+                'gmail_thread_id': email.gmail_thread_id,
+                'importance': email.importance,
+                'email_account': {
+                    'id': email.email_account.id,
+                    'email_address': email.email_account.email_address,
+                    'provider': email.email_account.provider
+                }
+            })
+            
+        except Exception as e:
+            return Response({
+                'message': f'Failed to get email content: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MarkEmailAsReadView(APIView):
+    """Mark an email as read"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, email_id):
+        try:
+            # Get the email
+            try:
+                email = EmailMessage.objects.select_related('email_account').get(
+                    id=email_id,
+                    email_account__user=request.user
+                )
+            except EmailMessage.DoesNotExist:
+                return Response({
+                    'message': 'Email not found'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Mark as read
+            email.is_read = True
+            email.save(update_fields=['is_read', 'updated_at'])
+            
+            return Response({
+                'message': 'Email marked as read successfully',
+                'email_id': email.id,
+                'is_read': email.is_read
+            })
+            
+        except Exception as e:
+            return Response({
+                'message': f'Failed to mark email as read: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MarkAllEmailsAsReadView(APIView):
+    """Mark all emails as read for the authenticated user"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            # Get all unread emails for the user
+            unread_emails = EmailMessage.objects.filter(
+                email_account__user=request.user,
+                is_read=False
+            )
+            
+            # Count unread emails
+            unread_count = unread_emails.count()
+            
+            if unread_count == 0:
+                return Response({
+                    'message': 'No unread emails found',
+                    'emails_updated': 0
+                })
+            
+            # Mark all as read
+            updated_count = unread_emails.update(
+                is_read=True,
+                updated_at=timezone.now()
+            )
+            
+            return Response({
+                'message': f'Successfully marked {updated_count} emails as read',
+                'emails_updated': updated_count
+            })
+            
+        except Exception as e:
+            return Response({
+                'message': f'Failed to mark all emails as read: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)

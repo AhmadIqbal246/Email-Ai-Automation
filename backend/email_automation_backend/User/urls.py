@@ -28,4 +28,7 @@ urlpatterns = [
     path('connect-email/', views.ConnectEmailView.as_view(), name='connect_email'),
     path('fetch-emails/', views.FetchEmailsView.as_view(), name='fetch_emails'),
     path('get-emails/', views.GetEmailsView.as_view(), name='get_emails'),
+    path('email-content/<uuid:email_id>/', views.GetEmailContentView.as_view(), name='get_email_content'),
+    path('mark-email-read/<uuid:email_id>/', views.MarkEmailAsReadView.as_view(), name='mark_email_read'),
+    path('mark-all-emails-read/', views.MarkAllEmailsAsReadView.as_view(), name='mark_all_emails_read'),
 ]
