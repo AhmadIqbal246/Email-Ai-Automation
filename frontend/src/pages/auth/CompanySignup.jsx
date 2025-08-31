@@ -38,7 +38,7 @@ const CompanySignup = () => {
     }
 
     try {
-      const response = await fetch(`${ENV.API_BASE_URL}/api/auth/company-signup/`, {
+      const response = await fetch(`${ENV.API_BASE_URL}/api/accounts/auth/company-signup/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

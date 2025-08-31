@@ -28,7 +28,7 @@ const AdminDashboard = () => {
   const fetchEmployees = async () => {
     try {
       console.log('Fetching employees from:', ENV.API_BASE_URL)
-      const response = await fetch(`${ENV.API_BASE_URL}/api/employees/`, {
+      const response = await fetch(`${ENV.API_BASE_URL}/api/accounts/employees/`, {
         headers: {
           'Authorization': `Token ${localStorage.getItem('authToken')}`
         }
@@ -45,7 +45,7 @@ const AdminDashboard = () => {
 
   const fetchInvitations = async () => {
     try {
-      const response = await fetch(`${ENV.API_BASE_URL}/api/invitations/`, {
+      const response = await fetch(`${ENV.API_BASE_URL}/api/accounts/invitations/`, {
         headers: {
           'Authorization': `Token ${localStorage.getItem('authToken')}`
         }
@@ -72,7 +72,7 @@ const AdminDashboard = () => {
     setSuccess('')
 
     try {
-      const response = await fetch(`${ENV.API_BASE_URL}/api/send-invitation/`, {
+      const response = await fetch(`${ENV.API_BASE_URL}/api/accounts/send-invitation/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +108,7 @@ const AdminDashboard = () => {
 
   const resendInvitation = async (invitationId) => {
     try {
-      const response = await fetch(`${ENV.API_BASE_URL}/api/resend-invitation/${invitationId}/`, {
+      const response = await fetch(`${ENV.API_BASE_URL}/api/accounts/resend-invitation/${invitationId}/`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${localStorage.getItem('authToken')}`

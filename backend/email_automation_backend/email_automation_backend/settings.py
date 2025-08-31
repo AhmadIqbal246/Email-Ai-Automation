@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'Accounts',
     'User',
 ]
 
@@ -133,7 +134,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User Model
-AUTH_USER_MODEL = 'User.User'
+AUTH_USER_MODEL = 'Accounts.User'
 
 # CORS Settings for React Frontend
 CORS_ALLOWED_ORIGINS = [

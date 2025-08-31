@@ -6,7 +6,7 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${ENV.API_BASE_URL}/api/auth/login/`, {
+      const response = await fetch(`${ENV.API_BASE_URL}/api/accounts/auth/login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ export const verifyToken = createAsyncThunk(
         return rejectWithValue('No token found')
       }
 
-      const response = await fetch(`${ENV.API_BASE_URL}/api/auth/verify/`, {
+      const response = await fetch(`${ENV.API_BASE_URL}/api/accounts/auth/verify/`, {
         headers: {
           'Authorization': `Token ${token}`
         }
@@ -126,7 +126,7 @@ export const refreshAuthToken = createAsyncThunk(
         return rejectWithValue('No refresh token found')
       }
 
-      const response = await fetch(`${ENV.API_BASE_URL}/api/auth/refresh/`, {
+      const response = await fetch(`${ENV.API_BASE_URL}/api/accounts/auth/refresh/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -163,7 +163,7 @@ export const logoutUser = createAsyncThunk(
       const token = localStorage.getItem('authToken')
       if (token) {
         // Optional: Call logout endpoint to invalidate token on server
-        await fetch(`${ENV.API_BASE_URL}/api/auth/logout/`, {
+        await fetch(`${ENV.API_BASE_URL}/api/accounts/auth/logout/`, {
           method: 'POST',
           headers: {
             'Authorization': `Token ${token}`

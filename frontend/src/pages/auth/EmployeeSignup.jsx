@@ -32,7 +32,7 @@ const EmployeeSignup = () => {
       }
 
       try {
-        const response = await fetch(`${ENV.API_BASE_URL}/api/auth/verify-invitation/`, {
+        const response = await fetch(`${ENV.API_BASE_URL}/api/accounts/auth/verify-invitation/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ const EmployeeSignup = () => {
     }
 
     try {
-      const response = await fetch(`${ENV.API_BASE_URL}/api/auth/employee-signup/`, {
+      const response = await fetch(`${ENV.API_BASE_URL}/api/accounts/auth/employee-signup/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
