@@ -353,19 +353,33 @@ const EmployeeDashboard = () => {
   const customActions = (
     <button
       onClick={handleNavigateToAIRules}
-      className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-sm font-medium text-gray-700 
-                 hover:bg-white/30 hover:border-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 
-                 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+      className="group relative inline-flex items-center px-5 py-2.5 bg-white/30 backdrop-blur-sm border border-white/40 rounded-xl text-sm font-semibold text-gray-800 
+                 hover:bg-white/40 hover:border-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:ring-offset-2 
+                 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 hover:-translate-y-0.5"
     >
-      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-      </svg>
-      Set AI Rules
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-100/50 to-indigo-100/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      <div className="relative flex items-center">
+        <div className="relative w-5 h-5 mr-2.5">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-md blur-[2px] opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
+          <svg className="relative w-5 h-5 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+        </div>
+        <span className="bg-gradient-to-r from-indigo-800 to-purple-800 bg-clip-text text-transparent">Set AI Rules</span>
+      </div>
     </button>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Ultra-Modern Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/20 via-purple-100/10 to-pink-100/20 animate-gradient-shift"></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-indigo-600/10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-to-br from-purple-400/10 to-pink-600/10 rounded-full blur-3xl animate-float-delayed"></div>
+        <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-gradient-to-br from-cyan-400/5 to-blue-600/5 rounded-full blur-2xl animate-pulse"></div>
+      </div>
+      
       <Navbar 
         title="Employee Dashboard"
         userRole="employee"
@@ -374,143 +388,332 @@ const EmployeeDashboard = () => {
         showLogoutButton={true}
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Error and Success Messages */}
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Ultra-Luxury Error and Success Messages */}
         {error && (
-          <div className="mb-6 p-4 border border-red-300 text-red-700 bg-red-50 rounded-lg">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="font-medium">Error:</span>
-              <span className="ml-1">{error}</span>
-              <button 
-                onClick={() => setError('')}
-                className="ml-auto p-1 hover:bg-red-200 rounded-full"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+          <div className="mb-8 relative overflow-hidden animate-fade-in-up">
+            <div className="relative p-6 bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-red-200/50">
+              <div className="absolute inset-0 bg-gradient-to-r from-red-50/50 to-rose-50/50 rounded-3xl"></div>
+              <div className="relative flex items-center">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-rose-500 rounded-2xl blur-lg opacity-30 animate-pulse"></div>
+                  <div className="relative w-12 h-12 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center shadow-xl">
+                    <svg className="w-6 h-6 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4 flex-1">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <span className="text-lg font-bold bg-gradient-to-r from-red-700 to-rose-800 bg-clip-text text-transparent">Error</span>
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                  </div>
+                  <p className="text-red-700 font-medium leading-relaxed">{error}</p>
+                </div>
+                <button 
+                  onClick={() => setError('')}
+                  className="group relative p-2.5 bg-white/60 backdrop-blur-sm hover:bg-white/80 rounded-xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-0.5 shadow-lg hover:shadow-xl border border-white/50"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-100/50 to-rose-100/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <svg className="relative w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         )}
         
         {success && (
-          <div className="mb-6 p-4 border border-green-300 text-green-700 bg-green-50 rounded-lg">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="font-medium">Success:</span>
-              <span className="ml-1">{success}</span>
-              <button 
-                onClick={() => setSuccess('')}
-                className="ml-auto p-1 hover:bg-green-200 rounded-full"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+          <div className="mb-8 relative overflow-hidden animate-fade-in-up">
+            <div className="relative p-6 bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-green-200/50">
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-50/50 to-green-50/50 rounded-3xl"></div>
+              <div className="relative flex items-center">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-green-500 rounded-2xl blur-lg opacity-30 animate-pulse"></div>
+                  <div className="relative w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-xl">
+                    <svg className="w-6 h-6 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4 flex-1">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <span className="text-lg font-bold bg-gradient-to-r from-emerald-700 to-green-800 bg-clip-text text-transparent">Success</span>
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                  </div>
+                  <p className="text-green-700 font-medium leading-relaxed">{success}</p>
+                </div>
+                <button 
+                  onClick={() => setSuccess('')}
+                  className="group relative p-2.5 bg-white/60 backdrop-blur-sm hover:bg-white/80 rounded-xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-0.5 shadow-lg hover:shadow-xl border border-white/50"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-100/50 to-green-100/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <svg className="relative w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         )}
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Left Column - Email Accounts */}
+          {/* Left Column - Ultra-Luxury Email Accounts */}
           <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900">Email Accounts</h3>
-                  </div>
-                  <span className="text-sm text-gray-500">{emailAccounts.length} connected</span>
-                </div>
-              </div>
+            <div className="relative overflow-hidden animate-fade-in-up">
+              {/* Premium Background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 animate-gradient-shift opacity-60"></div>
               
-              <div className="p-6">
-            {emailAccounts.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">No email accounts connected</h4>
-                    <p className="text-gray-500 mb-4">Connect your Gmail account to start using AI automation</p>
-                    <button 
-                      onClick={handleConnectEmail} 
-                      className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold 
-                               hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
-                               transition-all duration-200 ease-in-out transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
-                    >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                      </svg>
-                  Connect Gmail Account
-                </button>
-              </div>
-            ) : (
-                  <div className="space-y-4">
-                {emailAccounts.map((account) => (
-                      <div key={account.id} className="border border-gray-200 rounded-xl p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                            <div className="ml-3">
-                              <h4 className="text-sm font-semibold text-gray-900">{account.email}</h4>
-                              <p className="text-xs text-gray-600">{account.provider} Account</p>
-                            </div>
-                    </div>
-                          <div className="flex items-center space-x-2">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              account.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                                account.is_active ? 'bg-green-400' : 'bg-red-400'
-                              }`}></span>
-                              {account.is_active ? 'Connected' : 'Disconnected'}
-                            </span>
-                            {account.is_active && (
-                              <button
-                                onClick={() => handleFetchEmails(account.id)}
-                                disabled={loading}
-                                className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-50"
-                                title="Fetch emails"
-                              >
-                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                                Fetch
-                              </button>
-                            )}
+              {/* Glassmorphism Container */}
+              <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-700 group overflow-hidden">
+                {/* Premium Header */}
+                <div className="relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/10 via-blue-600/10 to-purple-600/10 animate-pulse"></div>
+                  <div className="relative p-6 border-b border-white/30 backdrop-blur-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        {/* Premium Icon */}
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl blur-lg opacity-30 animate-pulse"></div>
+                          <div className="relative w-12 h-12 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-xl transform hover:scale-110 transition-all duration-300">
+                            <svg className="w-6 h-6 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
                           </div>
+                        </div>
+                        
+                        {/* Enhanced Title */}
+                        <div className="space-y-1">
+                          <h3 className="text-xl font-bold bg-gradient-to-r from-gray-900 via-indigo-800 to-blue-800 bg-clip-text text-transparent leading-tight">
+                            Email Accounts
+                          </h3>
+                          <div className="flex items-center space-x-2 text-sm text-gray-600">
+                            <div className="w-2 h-2 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full animate-pulse"></div>
+                            <span className="font-medium">{emailAccounts.length} connected</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Status Badge */}
+                      {emailAccounts.length > 0 && (
+                        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg transform hover:scale-105 transition-transform duration-200">
+                          <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
+                          ACTIVE
+                        </span>
+                      )}
                     </div>
                   </div>
-                ))}
-                    <button 
-                      onClick={handleConnectEmail} 
-                      className="w-full mt-4 inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white 
-                               hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                  Connect Another Account
-                </button>
-              </div>
-            )}
+                </div>
+              
+                {/* Content Area */}
+                <div className="p-8">
+                  {emailAccounts.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="relative mb-8">
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-full blur-2xl opacity-30 animate-pulse"></div>
+                        <div className="relative w-24 h-24 bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 rounded-3xl flex items-center justify-center mx-auto shadow-2xl">
+                          <svg className="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <h4 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-900 bg-clip-text text-transparent mb-3">
+                        No email accounts connected
+                      </h4>
+                      <p className="text-gray-600 text-lg max-w-md mx-auto leading-relaxed mb-8">
+                        Connect your Gmail account to start using AI-powered email automation
+                      </p>
+                      
+                      {/* Premium Connect Button */}
+                      <button 
+                        onClick={handleConnectEmail}
+                        disabled={loading}
+                        className="group relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold rounded-2xl shadow-2xl hover:shadow-3xl disabled:opacity-50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 disabled:hover:scale-100 disabled:hover:translate-y-0"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
+                        <div className="relative flex items-center">
+                          {loading ? (
+                            <>
+                              <div className="w-6 h-6 mr-3">
+                                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                              </div>
+                              <span>Connecting...</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-6 h-6 mr-3 drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                              </svg>
+                              <span>Connect Gmail Account</span>
+                            </>
+                          )}
+                        </div>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {emailAccounts.map((account, index) => (
+                        <div 
+                          key={account.id}
+                          style={{ animationDelay: `${index * 100}ms` }}
+                          className="group relative overflow-hidden cursor-default transition-all duration-500 animate-fade-in-up hover:scale-[1.02] hover:-translate-y-1"
+                        >
+                          {/* Premium Account Card */}
+                          <div className={`relative p-5 rounded-2xl backdrop-blur-sm transition-all duration-500 ${
+                            account.is_active 
+                              ? 'bg-gradient-to-br from-emerald-50/80 via-green-50/60 to-blue-50/40 border border-emerald-200/50 shadow-lg hover:shadow-xl'
+                              : 'bg-white/60 border border-gray-200/50 shadow-md hover:bg-white/80 hover:shadow-lg'
+                          }`}>
+                            
+                            {/* Background Effects */}
+                            <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                              <div className={`absolute inset-0 rounded-2xl ${
+                                account.is_active 
+                                  ? 'bg-gradient-to-br from-emerald-100/30 via-green-100/20 to-blue-100/30'
+                                  : 'bg-gradient-to-br from-gray-100/20 via-white/10 to-blue-50/20'
+                              }`}></div>
+                            </div>
+                            
+                            {/* Active Indicator Line */}
+                            {account.is_active && (
+                              <div className="absolute left-0 top-4 bottom-4 w-1 bg-gradient-to-b from-emerald-500 via-green-500 to-blue-500 rounded-full shadow-lg animate-pulse"></div>
+                            )}
+                            
+                            {/* Improved Layout Structure */}
+                            <div className="relative space-y-4">
+                              {/* Top Row - Account Info */}
+                              <div className="flex items-center space-x-4">
+                                {/* Account Icon */}
+                                <div className="relative flex-shrink-0">
+                                  <div className={`absolute inset-0 rounded-full blur-md opacity-30 ${
+                                    account.is_active ? 'bg-gradient-to-r from-emerald-400 to-green-500' : 'bg-gradient-to-r from-gray-400 to-blue-400'
+                                  }`}></div>
+                                  <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl ${
+                                    account.is_active ? 'bg-gradient-to-br from-emerald-500 to-green-600' : 'bg-gradient-to-br from-gray-500 to-blue-500'
+                                  }`}>
+                                    <svg className="w-7 h-7 text-white drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                  </div>
+                                </div>
+                                
+                                {/* Account Info */}
+                                <div className="flex-1 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className={`text-lg font-bold leading-tight ${
+                                      account.is_active 
+                                        ? 'bg-gradient-to-r from-gray-900 via-emerald-800 to-green-800 bg-clip-text text-transparent'
+                                        : 'text-gray-800'
+                                    }`}>
+                                      {account.email}
+                                    </h4>
+                                    
+                                    {/* Status Badge - Moved to top right */}
+                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold shadow-lg transform hover:scale-105 transition-transform duration-200 ${
+                                      account.is_active 
+                                        ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white'
+                                        : 'bg-gradient-to-r from-red-500 to-rose-500 text-white'
+                                    }`}>
+                                      <div className={`w-2 h-2 rounded-full mr-2 ${
+                                        account.is_active ? 'bg-white animate-pulse' : 'bg-white/80'
+                                      }`}></div>
+                                      {account.is_active ? 'CONNECTED' : 'DISCONNECTED'}
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-3">
+                                      <p className="text-sm font-medium text-gray-600">
+                                        {account.provider} Account
+                                      </p>
+                                      {account.is_active && (
+                                        <div className="flex items-center space-x-1 text-xs text-emerald-600">
+                                          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                          <span className="font-medium">Active</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    <div className="text-xs text-gray-500">
+                                      ID: {account.id}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Bottom Row - Actions */}
+                              <div className="flex items-center justify-between pt-3 border-t border-white/20">
+                                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  <span className="font-medium">
+                                    {account.is_active ? 'Account is synchronized' : 'Account needs reconnection'}
+                                  </span>
+                                </div>
+                                
+                                {/* Action Buttons */}
+                                <div className="flex items-center space-x-3">
+                                  {/* Fetch Button */}
+                                  {account.is_active && (
+                                    <button
+                                      onClick={() => handleFetchEmails(account.id)}
+                                      disabled={loading}
+                                      className="group/btn relative inline-flex items-center px-4 py-2.5 bg-white/90 backdrop-blur-sm text-blue-700 font-semibold rounded-xl shadow-lg hover:shadow-xl border border-white/60 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:translate-y-0"
+                                      title="Fetch emails from this account"
+                                    >
+                                      <div className="absolute inset-0 bg-gradient-to-r from-blue-100/60 to-indigo-100/60 rounded-xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                                      <div className="relative flex items-center">
+                                        <svg className={`w-4 h-4 mr-2 transition-transform duration-300 ${
+                                          loading ? 'animate-spin' : 'group-hover/btn:rotate-180'
+                                        }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        <span>{loading ? 'Syncing...' : 'Sync Emails'}</span>
+                                      </div>
+                                    </button>
+                                  )}
+                                  
+                                  {/* Settings Button */}
+                                  <button
+                                    className="group/btn relative inline-flex items-center px-4 py-2.5 bg-white/90 backdrop-blur-sm text-gray-700 font-semibold rounded-xl shadow-lg hover:shadow-xl border border-white/60 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5"
+                                    title="Account settings"
+                                  >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-gray-100/60 to-slate-100/60 rounded-xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                                    <div className="relative flex items-center">
+                                      <svg className="w-4 h-4 mr-2 transition-transform duration-300 group-hover/btn:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      </svg>
+                                      <span>Settings</span>
+                                    </div>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Connect Another Account Button */}
+                      <button 
+                        onClick={handleConnectEmail}
+                        disabled={loading}
+                        className="group relative w-full mt-6 inline-flex items-center justify-center px-6 py-4 bg-white/60 backdrop-blur-sm text-gray-700 font-semibold rounded-2xl shadow-lg hover:shadow-xl border border-white/50 disabled:opacity-50 transition-all duration-300 transform hover:scale-[1.02] hover:-translate-y-0.5 disabled:hover:scale-100 disabled:hover:translate-y-0 hover:bg-white/80"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-gray-100/50 to-blue-100/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="relative flex items-center">
+                          <svg className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          <span>Connect Another Account</span>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
