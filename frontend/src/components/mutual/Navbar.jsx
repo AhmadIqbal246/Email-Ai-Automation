@@ -10,7 +10,11 @@ const Navbar = ({
   showUserMenu = true,
   showLogoutButton = false,
   customActions = null,
-  brandIcon = null
+  brandIcon = null,
+  // Admin navigation props
+  showAdminNav = false,
+  activeSection = "dashboard",
+  onNavigate = null
 }) => {
   const { user } = useSelector((state) => state.auth)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
@@ -75,8 +79,75 @@ const Navbar = ({
               </div>
             </div>
             
-            {/* Center - Custom actions (if provided) */}
-            {customActions && (
+            {/* Center - Admin navigation or Custom actions */}
+            {showAdminNav && userRole === 'admin' ? (
+              <div className="hidden md:flex items-center space-x-2">
+                <button
+                  onClick={() => onNavigate && onNavigate('dashboard')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
+                    activeSection === 'dashboard'
+                      ? 'bg-blue-500/20 text-blue-700 border border-blue-300/30'
+                      : 'bg-white/10 text-gray-600 hover:bg-white/20 hover:text-gray-800'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z" />
+                    </svg>
+                    <span>Dashboard</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => onNavigate && onNavigate('employees')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
+                    activeSection === 'employees'
+                      ? 'bg-green-500/20 text-green-700 border border-green-300/30'
+                      : 'bg-white/10 text-gray-600 hover:bg-white/20 hover:text-gray-800'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span>Employees</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => onNavigate && onNavigate('invite')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
+                    activeSection === 'invite'
+                      ? 'bg-purple-500/20 text-purple-700 border border-purple-300/30'
+                      : 'bg-white/10 text-gray-600 hover:bg-white/20 hover:text-gray-800'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    <span>Invite</span>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => onNavigate && onNavigate('invitations')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
+                    activeSection === 'invitations'
+                      ? 'bg-yellow-500/20 text-yellow-700 border border-yellow-300/30'
+                      : 'bg-white/10 text-gray-600 hover:bg-white/20 hover:text-gray-800'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    <span>Invitations</span>
+                  </div>
+                </button>
+              </div>
+            ) : customActions && (
               <div className="hidden md:flex items-center space-x-4">
                 {customActions}
               </div>
