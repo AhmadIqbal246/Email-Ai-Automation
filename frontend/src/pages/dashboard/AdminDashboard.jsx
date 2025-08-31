@@ -284,6 +284,48 @@ const AdminDashboard = () => {
     }
   }
 
+  const handleDisconnectGmail = async (accountId) => {
+    if (!window.confirm('Are you sure you want to disconnect this Gmail account? All associated emails will be removed.')) {
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    
+    try {
+      const response = await fetch(`${ENV.API_BASE_URL}/api/disconnect-email-account/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          email_account_id: accountId
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to disconnect Gmail account');
+      }
+      
+      // Remove the account from state
+      setEmailAccounts([]);
+      
+      // Clear emails from state
+      setEmails([]);
+      
+      setSuccess(data.message || 'Gmail account disconnected successfully');
+    } catch (error) {
+      console.error('Error disconnecting Gmail account:', error);
+      setError(error.message || 'Failed to disconnect Gmail account. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleMarkAllAsRead = async () => {
     try {
       console.log('Marking all emails as read...')
@@ -498,136 +540,104 @@ const AdminDashboard = () => {
                                 <div className="absolute left-0 top-4 bottom-4 w-1 bg-gradient-to-b from-emerald-500 via-green-500 to-blue-500 rounded-full shadow-lg animate-pulse"></div>
                               )}
                               
-                              {/* Improved Layout Structure */}
-                              <div className="relative space-y-4">
-                                {/* Top Row - Account Info */}
-                                <div className="flex items-center space-x-4">
-                                  {/* Account Icon */}
-                                  <div className="relative flex-shrink-0">
-                                    <div className={`absolute inset-0 rounded-full blur-md opacity-30 ${
-                                      account.is_active ? 'bg-gradient-to-r from-emerald-400 to-green-500' : 'bg-gradient-to-r from-gray-400 to-blue-400'
-                                    }`}></div>
-                                    <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl ${
-                                      account.is_active ? 'bg-gradient-to-br from-emerald-500 to-green-600' : 'bg-gradient-to-br from-gray-500 to-blue-500'
-                                    }`}>
-                                      <svg className="w-7 h-7 text-white drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                      </svg>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Account Info */}
-                                  <div className="flex-1 space-y-2">
-                                    <div className="flex items-center justify-between">
-                                      <h4 className={`text-lg font-bold leading-tight ${
-                                        account.is_active 
-                                          ? 'bg-gradient-to-r from-gray-900 via-emerald-800 to-green-800 bg-clip-text text-transparent'
-                                          : 'text-gray-800'
-                                      }`}>
-                                        {account.email}
-                                      </h4>
-                                      
-                                      {/* Status Badge - Moved to top right */}
-                                      <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold shadow-lg transform hover:scale-105 transition-transform duration-200 ${
-                                        account.is_active 
-                                          ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white'
-                                          : 'bg-gradient-to-r from-red-500 to-rose-500 text-white'
-                                      }`}>
-                                        <div className={`w-2 h-2 rounded-full mr-2 ${
-                                          account.is_active ? 'bg-white animate-pulse' : 'bg-white/80'
-                                        }`}></div>
-                                        {account.is_active ? 'CONNECTED' : 'DISCONNECTED'}
-                                      </span>
-                                    </div>
-                                    
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center space-x-3">
-                                        <p className="text-sm font-medium text-gray-600">
-                                          {account.provider} Account
-                                        </p>
-                                        {account.is_active && (
-                                          <div className="flex items-center space-x-1 text-xs text-emerald-600">
-                                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                                            <span className="font-medium">Active</span>
-                                          </div>
-                                        )}
-                                      </div>
-                                      
-                                      <div className="text-xs text-gray-500">
-                                        ID: {account.id}
-                                      </div>
-                                    </div>
+                            {/* Modern Gmail Account Display */}
+                            <div className="relative space-y-6">
+                              {/* Account Header */}
+                              <div className="flex items-start space-x-4">
+                                {/* Gmail Icon */}
+                                <div className="relative flex-shrink-0">
+                                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-green-500 rounded-2xl blur-md opacity-30 animate-pulse"></div>
+                                  <div className="relative w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-xl transform hover:scale-110 transition-all duration-300">
+                                    <svg className="w-8 h-8 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
                                   </div>
                                 </div>
                                 
-                                {/* Bottom Row - Actions */}
-                                <div className="flex items-center justify-between pt-3 border-t border-white/20">
-                                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span className="font-medium">
-                                      {account.is_active ? 'Account is synchronized' : 'Account needs reconnection'}
-                                    </span>
-                                  </div>
-                                  
-                                  {/* Action Buttons */}
-                                  <div className="flex items-center space-x-3">
-                                    {/* Fetch Button */}
-                                    {account.is_active && (
-                                      <button
-                                        onClick={() => handleFetchEmails(account.id)}
-                                        disabled={loading}
-                                        className="group/btn relative inline-flex items-center px-4 py-2.5 bg-white/90 backdrop-blur-sm text-blue-700 font-semibold rounded-xl shadow-lg hover:shadow-xl border border-white/60 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:translate-y-0"
-                                        title="Fetch emails from this account"
-                                      >
-                                        <div className="absolute inset-0 bg-gradient-to-r from-blue-100/60 to-indigo-100/60 rounded-xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-                                        <div className="relative flex items-center">
-                                          <svg className={`w-4 h-4 mr-2 transition-transform duration-300 ${
-                                            loading ? 'animate-spin' : 'group-hover/btn:rotate-180'
-                                          }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                          </svg>
-                                          <span>{loading ? 'Syncing...' : 'Sync Emails'}</span>
-                                        </div>
-                                      </button>
-                                    )}
+                                {/* Account Details */}
+                                <div className="flex-1 space-y-3">
+                                  {/* Email and Status */}
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="text-xl font-bold bg-gradient-to-r from-gray-900 via-emerald-800 to-green-800 bg-clip-text text-transparent">
+                                        {account.email}
+                                      </h4>
+                                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg">
+                                        <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
+                                        CONNECTED
+                                      </span>
+                                    </div>
                                     
-                                    {/* Settings Button */}
-                                    <button
-                                      className="group/btn relative inline-flex items-center px-4 py-2.5 bg-white/90 backdrop-blur-sm text-gray-700 font-semibold rounded-xl shadow-lg hover:shadow-xl border border-white/60 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5"
-                                      title="Account settings"
-                                    >
-                                      <div className="absolute inset-0 bg-gradient-to-r from-gray-100/60 to-slate-100/60 rounded-xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-                                      <div className="relative flex items-center">
-                                        <svg className="w-4 h-4 mr-2 transition-transform duration-300 group-hover/btn:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        <span>Settings</span>
+                                    <div className="flex items-center space-x-4">
+                                      <span className="text-sm font-medium text-gray-600">{account.provider} Account</span>
+                                      <div className="flex items-center space-x-1 text-xs text-emerald-600">
+                                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                        <span className="font-medium">Active & Synchronized</span>
                                       </div>
-                                    </button>
+                                      <span className="text-xs text-gray-500">ID: {account.id}</span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
+                              
+                              {/* Action Buttons */}
+                              <div className="flex items-center justify-center space-x-4 pt-4">
+                                {/* Sync Emails Button */}
+                                <button
+                                  onClick={() => handleFetchEmails(account.id)}
+                                  disabled={loading}
+                                  className="group/btn relative inline-flex items-center px-6 py-3 bg-white/90 backdrop-blur-sm text-blue-700 font-semibold rounded-xl shadow-lg hover:shadow-xl border border-white/60 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:translate-y-0 flex-1 justify-center"
+                                  title="Sync emails from Gmail"
+                                >
+                                  <div className="absolute inset-0 bg-gradient-to-r from-blue-100/60 to-indigo-100/60 rounded-xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                                  <div className="relative flex items-center">
+                                    <svg className={`w-5 h-5 mr-2 transition-transform duration-300 ${
+                                      loading ? 'animate-spin' : 'group-hover/btn:rotate-180'
+                                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    <span>{loading ? 'Syncing...' : 'Sync Emails'}</span>
+                                  </div>
+                                </button>
+                                
+                                {/* Disconnect Button */}
+                                <button
+                                  onClick={() => handleDisconnectGmail(account.id)}
+                                  disabled={loading}
+                                  className="group/btn relative inline-flex items-center px-6 py-3 bg-white/90 backdrop-blur-sm text-red-700 font-semibold rounded-xl shadow-lg hover:shadow-xl border border-white/60 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:translate-y-0 flex-1 justify-center"
+                                  title="Disconnect Gmail account"
+                                >
+                                  <div className="absolute inset-0 bg-gradient-to-r from-red-100/60 to-rose-100/60 rounded-xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                                  <div className="relative flex items-center">
+                                    <svg className="w-5 h-5 mr-2 transition-transform duration-300 group-hover/btn:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                      </svg>
+                                    <span>Disconnect</span>
+                                  </div>
+                                </button>
+                              </div>
+                            </div>
                             </div>
                           </div>
                         ))}
                         
-                        {/* Connect Another Account Button */}
-                        <button 
-                          onClick={handleConnectEmail}
-                          disabled={loading}
-                          className="group relative w-full mt-6 inline-flex items-center justify-center px-6 py-4 bg-white/60 backdrop-blur-sm text-gray-700 font-semibold rounded-2xl shadow-lg hover:shadow-xl border border-white/50 disabled:opacity-50 transition-all duration-300 transform hover:scale-[1.02] hover:-translate-y-0.5 disabled:hover:scale-100 disabled:hover:translate-y-0 hover:bg-white/80"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-gray-100/50 to-blue-100/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                          <div className="relative flex items-center">
-                            <svg className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            <span>Connect Another Account</span>
-                          </div>
-                        </button>
+                        {/* Only show connect another account if we have exactly 0 accounts */}
+                        {emailAccounts.length === 0 && (
+                          <button 
+                            onClick={handleConnectEmail}
+                            disabled={loading}
+                            className="group relative w-full mt-6 inline-flex items-center justify-center px-6 py-4 bg-white/60 backdrop-blur-sm text-gray-700 font-semibold rounded-2xl shadow-lg hover:shadow-xl border border-white/50 disabled:opacity-50 transition-all duration-300 transform hover:scale-[1.02] hover:-translate-y-0.5 disabled:hover:scale-100 disabled:hover:translate-y-0 hover:bg-white/80"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-gray-100/50 to-blue-100/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="relative flex items-center">
+                              <svg className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                              <span>Connect Gmail Account</span>
+                            </div>
+                          </button>
+                        )}
+                        
                       </div>
                     )}
                   </div>

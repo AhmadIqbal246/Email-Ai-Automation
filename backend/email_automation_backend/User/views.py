@@ -314,7 +314,8 @@ class GetEmailAccountsView(APIView):
                 'email_accounts': [
                     {
                         'id': account.id,
-                        'email_address': account.email_address,
+                        'email': account.email_address,  # Frontend expects 'email' property
+                        'email_address': account.email_address,  # Keep both for compatibility
                         'provider': account.provider,
                         'display_name': account.display_name,
                         'is_primary': account.is_primary,
@@ -741,4 +742,52 @@ class MarkAllEmailsAsReadView(APIView):
         except Exception as e:
             return Response({
                 'message': f'Failed to mark all emails as read: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DisconnectEmailAccountView(APIView):
+    """Disconnect a Gmail account and delete all associated emails"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            email_account_id = request.data.get('email_account_id')
+            
+            if not email_account_id:
+                return Response({
+                    'message': 'Email account ID is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get the email account
+            try:
+                email_account = EmailAccount.objects.get(
+                    id=email_account_id,
+                    user=request.user
+                )
+            except EmailAccount.DoesNotExist:
+                return Response({
+                    'message': 'Email account not found'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Store email address for response message
+            email_address = email_account.email_address
+            
+            # Count associated emails before deletion
+            emails_count = EmailMessage.objects.filter(email_account=email_account).count()
+            
+            # Delete all associated emails first
+            EmailMessage.objects.filter(email_account=email_account).delete()
+            
+            # Delete the email account
+            email_account.delete()
+            
+            return Response({
+                'message': f'Successfully disconnected {email_address} and removed {emails_count} associated emails',
+                'disconnected_account': email_address,
+                'emails_removed': emails_count
+            })
+            
+        except Exception as e:
+            return Response({
+                'message': f'Failed to disconnect email account: {str(e)}'
             }, status=status.HTTP_400_BAD_REQUEST)
