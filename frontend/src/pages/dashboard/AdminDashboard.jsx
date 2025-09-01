@@ -446,6 +446,45 @@ const AdminDashboard = () => {
     setEmailContent('')
   }
 
+  const handleSendReply = async (replyData) => {
+    try {
+      if (!selectedEmail) {
+        throw new Error('No email selected for reply')
+      }
+
+      console.log('Admin sending reply to email:', selectedEmail.id, replyData)
+      
+      const response = await fetch(`${ENV.API_BASE_URL}/api/reply-to-email/${selectedEmail.id}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify(replyData)
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Admin reply sent successfully:', data)
+        
+        setSuccess(data.message || 'Reply sent successfully!')
+        
+        // Refresh emails to show the new reply
+        setTimeout(() => {
+          fetchEmails()
+        }, 1000)
+      } else {
+        const errorData = await response.json()
+        console.error('Admin reply failed:', response.status, errorData)
+        throw new Error(errorData.message || 'Failed to send reply')
+      }
+    } catch (error) {
+      console.error('Failed to send reply (Admin):', error)
+      setError(`Error sending reply: ${error.message}`)
+      throw error // Re-throw to let the modal handle the error state
+    }
+  }
+
   // Render different sections based on activeSection
   const renderSection = () => {
     switch(activeSection) {
@@ -781,6 +820,7 @@ const AdminDashboard = () => {
         email={selectedEmail}
         content={emailContent}
         loading={loading && showEmailModal}
+        onSendReply={handleSendReply}
       />
     </div>
   )
