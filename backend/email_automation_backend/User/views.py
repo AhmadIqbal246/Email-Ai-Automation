@@ -63,7 +63,7 @@ class GmailService:
             print(f"Error getting user profile: {e}")
             return None
     
-    def fetch_emails(self, max_results=50, query=''):
+    def fetch_emails(self, max_results=10, query=''):
         """Fetch emails from Gmail"""
         try:
             if not self.service:
@@ -500,9 +500,9 @@ class FetchEmailsView(APIView):
                 email_account.refresh_token
             )
             
-            # Fetch emails
+            # Fetch emails (limit to 10 for better performance)
             start_time = datetime.now()
-            emails_data = gmail_service.fetch_emails(max_results=50)
+            emails_data = gmail_service.fetch_emails(max_results=10)
             
             # Process and store emails
             messages_processed = 0
@@ -742,6 +742,62 @@ class MarkAllEmailsAsReadView(APIView):
         except Exception as e:
             return Response({
                 'message': f'Failed to mark all emails as read: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ManualEmailRefreshView(APIView):
+    """Manually trigger email refresh for all user's email accounts"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            from .tasks import fetch_single_account_emails_task
+            
+            # Get all active email accounts for the user
+            email_accounts = EmailAccount.objects.filter(
+                user=request.user,
+                is_active=True,
+                access_token__isnull=False
+            ).exclude(access_token='')
+            
+            if not email_accounts.exists():
+                return Response({
+                    'message': 'No active email accounts found'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Trigger Celery tasks for each email account
+            task_results = []
+            for account in email_accounts:
+                try:
+                    # Trigger the Celery task
+                    task = fetch_single_account_emails_task.delay(
+                        str(account.id), 
+                        'manual'
+                    )
+                    task_results.append({
+                        'account_id': str(account.id),
+                        'email_address': account.email_address,
+                        'task_id': task.id,
+                        'status': 'queued'
+                    })
+                except Exception as e:
+                    task_results.append({
+                        'account_id': str(account.id),
+                        'email_address': account.email_address,
+                        'task_id': None,
+                        'status': 'error',
+                        'error': str(e)
+                    })
+            
+            return Response({
+                'message': f'Email refresh initiated for {len(email_accounts)} accounts',
+                'accounts_processed': len(email_accounts),
+                'tasks': task_results
+            })
+            
+        except Exception as e:
+            return Response({
+                'message': f'Failed to initiate email refresh: {str(e)}'
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
