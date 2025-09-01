@@ -64,7 +64,7 @@ def fetch_all_emails_task(self):
                         
                         if not existing_email:
                             # Create new email message
-                            EmailMessage.objects.create(
+                            new_email = EmailMessage.objects.create(
                                 email_account=account,
                                 gmail_message_id=email_data['gmail_message_id'],
                                 gmail_thread_id=email_data['gmail_thread_id'],
@@ -79,6 +79,14 @@ def fetch_all_emails_task(self):
                             )
                             messages_processed_for_account += 1
                             total_emails_processed += 1
+                            
+                            # Trigger AI processing for the new email
+                            try:
+                                from Ai_processing.tasks import process_new_email_with_ai
+                                process_new_email_with_ai.delay(str(new_email.id))
+                                logger.info(f"🤖 Queued AI processing for new email: {new_email.subject}")
+                            except Exception as ai_error:
+                                logger.error(f"❌ Failed to queue AI processing: {str(ai_error)}")
                             
                     except Exception as e:
                         error_msg = f"Error processing email {email_data.get('gmail_message_id', 'unknown')} for {account.email_address}: {str(e)}"
@@ -198,7 +206,7 @@ def fetch_single_account_emails_task(email_account_id, fetch_type='manual'):
                 
                 if not existing_email:
                     # Create new email message
-                    EmailMessage.objects.create(
+                    new_email = EmailMessage.objects.create(
                         email_account=account,
                         gmail_message_id=email_data['gmail_message_id'],
                         gmail_thread_id=email_data['gmail_thread_id'],
@@ -212,6 +220,14 @@ def fetch_single_account_emails_task(email_account_id, fetch_type='manual'):
                         has_attachments=email_data['has_attachments']
                     )
                     messages_processed += 1
+                    
+                    # Trigger AI processing for the new email
+                    try:
+                        from Ai_processing.tasks import process_new_email_with_ai
+                        process_new_email_with_ai.delay(str(new_email.id))
+                        logger.info(f"🤖 Queued AI processing for new email: {new_email.subject}")
+                    except Exception as ai_error:
+                        logger.error(f"❌ Failed to queue AI processing: {str(ai_error)}")
                     
             except Exception as e:
                 logger.error(f"Error processing email {email_data.get('gmail_message_id', 'unknown')}: {str(e)}")
