@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
+from django.db import transaction
 
 import json
 import os
@@ -949,7 +950,7 @@ class ManualEmailRefreshView(APIView):
 
 
 class DisconnectEmailAccountView(APIView):
-    """Disconnect a Gmail account and delete all associated emails"""
+    """Disconnect a Gmail account and delete all associated data properly"""
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
@@ -975,24 +976,163 @@ class DisconnectEmailAccountView(APIView):
             # Store email address for response message
             email_address = email_account.email_address
             
-            # Count associated emails before deletion
-            emails_count = EmailMessage.objects.filter(email_account=email_account).count()
-            
-            # Delete all associated emails first
-            EmailMessage.objects.filter(email_account=email_account).delete()
-            
-            # Delete the email account
-            email_account.delete()
-            
-            return Response({
-                'message': f'Successfully disconnected {email_address} and removed {emails_count} associated emails',
-                'disconnected_account': email_address,
-                'emails_removed': emails_count
-            })
+            # Use database transaction to ensure atomicity
+            with transaction.atomic():
+                # Step 1: Count associated data before deletion for reporting
+                emails_count = EmailMessage.objects.filter(email_account=email_account).count()
+                fetch_logs_count = EmailFetchLog.objects.filter(email_account=email_account).count()
+                
+                print(f"Starting deletion for account {email_address}")
+                print(f"Found {emails_count} emails and {fetch_logs_count} fetch logs")
+                
+                # Step 2: Delete AI processing logs first (they depend on EmailMessage)
+                processing_logs_count = 0
+                try:
+                    from Ai_processing.models import EmailProcessingLog
+                    processing_logs = EmailProcessingLog.objects.filter(
+                        email_message__email_account=email_account
+                    )
+                    processing_logs_count = processing_logs.count()
+                    
+                    if processing_logs_count > 0:
+                        # Delete in batches to avoid issues
+                        deleted_processing_logs = 0
+                        while True:
+                            batch = list(processing_logs[:100])
+                            if not batch:
+                                break
+                            EmailProcessingLog.objects.filter(id__in=[log.id for log in batch]).delete()
+                            deleted_processing_logs += len(batch)
+                            print(f"Deleted {len(batch)} processing logs (total: {deleted_processing_logs})")
+                        
+                        print(f"Deleted {processing_logs_count} AI processing logs")
+                except ImportError:
+                    print("AI processing module not available")
+                except Exception as e:
+                    print(f"Error deleting AI processing logs: {e}")
+                
+                # Step 3: Handle self-referencing EmailMessage relationships with raw SQL
+                # This is the most robust way to handle complex parent_email relationships
+                try:
+                    from django.db import connection
+                    with connection.cursor() as cursor:
+                        # First, clear ALL parent_email references that point to messages from this account
+                        cursor.execute("""
+                            UPDATE User_emailmessage 
+                            SET parent_email_id = NULL 
+                            WHERE parent_email_id IN (
+                                SELECT id FROM User_emailmessage WHERE email_account_id = %s
+                            )
+                        """, [str(email_account.id)])
+                        parent_refs_cleared = cursor.rowcount
+                        print(f"Cleared {parent_refs_cleared} parent_email references using raw SQL")
+                        
+                        # Also clear parent_email references for messages in this account
+                        cursor.execute("""
+                            UPDATE User_emailmessage 
+                            SET parent_email_id = NULL 
+                            WHERE email_account_id = %s AND parent_email_id IS NOT NULL
+                        """, [str(email_account.id)])
+                        self_refs_cleared = cursor.rowcount
+                        print(f"Cleared {self_refs_cleared} self-references using raw SQL")
+                        
+                except Exception as e:
+                    print(f"Error clearing parent_email references with raw SQL: {e}")
+                    # Fallback to Django ORM
+                    account_emails = EmailMessage.objects.filter(email_account=email_account)
+                    
+                    # Clear parent_email references where parent belongs to this account
+                    parent_refs_cleared = EmailMessage.objects.filter(
+                        parent_email__in=account_emails
+                    ).update(parent_email=None)
+                    print(f"Cleared {parent_refs_cleared} parent_email references with ORM")
+                    
+                    # Also clear parent_email references for emails in this account
+                    self_refs_cleared = account_emails.filter(
+                        parent_email__isnull=False
+                    ).update(parent_email=None)
+                    print(f"Cleared {self_refs_cleared} self-references with ORM")
+                
+                # Step 4: Delete EmailFetchLog records in batches
+                fetch_logs = EmailFetchLog.objects.filter(email_account=email_account)
+                deleted_fetch_logs = 0
+                batch_size = 200
+                while True:
+                    batch = list(fetch_logs[:batch_size])
+                    if not batch:
+                        break
+                    EmailFetchLog.objects.filter(id__in=[log.id for log in batch]).delete()
+                    deleted_fetch_logs += len(batch)
+                    if deleted_fetch_logs % 1000 == 0:
+                        print(f"Deleted {deleted_fetch_logs} fetch logs so far...")
+                
+                print(f"Deleted {deleted_fetch_logs} fetch logs")
+                
+                # Step 5: Delete EmailMessage records in small batches
+                deleted_emails = 0
+                batch_size = 50  # Small batch size for safety
+                
+                while True:
+                    email_batch = list(EmailMessage.objects.filter(email_account=email_account)[:batch_size])
+                    if not email_batch:
+                        break
+                    
+                    try:
+                        # Double-check that parent_email is None for all messages in batch
+                        EmailMessage.objects.filter(
+                            id__in=[e.id for e in email_batch],
+                            parent_email__isnull=False
+                        ).update(parent_email=None)
+                        
+                        # Delete this batch
+                        EmailMessage.objects.filter(id__in=[e.id for e in email_batch]).delete()
+                        deleted_emails += len(email_batch)
+                        
+                        if deleted_emails % 100 == 0:
+                            print(f"Deleted {deleted_emails} emails so far...")
+                            
+                    except Exception as e:
+                        print(f"Error deleting email batch: {e}")
+                        # Try to delete one by one
+                        for email in email_batch:
+                            try:
+                                email.parent_email = None
+                                email.save()
+                                email.delete()
+                                deleted_emails += 1
+                            except Exception as email_error:
+                                print(f"Failed to delete email {email.id}: {email_error}")
+                
+                print(f"Deleted {deleted_emails} emails")
+                
+                # Step 6: Finally delete the EmailAccount
+                email_account.delete()
+                print(f"Deleted email account: {email_address}")
+                
+                return Response({
+                    'message': f'Successfully disconnected {email_address}',
+                    'details': {
+                        'disconnected_account': email_address,
+                        'emails_removed': emails_count,
+                        'fetch_logs_removed': fetch_logs_count,
+                        'processing_logs_removed': processing_logs_count
+                    }
+                })
             
         except Exception as e:
+            # Log the full error for debugging
+            import traceback
+            error_msg = str(e)
+            full_trace = traceback.format_exc()
+            print(f"Error disconnecting email account: {error_msg}")
+            print(f"Full traceback: {full_trace}")
+            
+            # Provide more helpful error message
+            if "FOREIGN KEY constraint failed" in error_msg:
+                error_msg = "There are still database references preventing deletion. This is a database constraint issue."
+            
             return Response({
-                'message': f'Failed to disconnect email account: {str(e)}'
+                'message': f'Failed to disconnect email account: {error_msg}'
             }, status=status.HTTP_400_BAD_REQUEST)
 
 

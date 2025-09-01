@@ -10,7 +10,7 @@ import CompanySignup from './pages/auth/CompanySignup'
 import EmployeeSignup from './pages/auth/EmployeeSignup'
 import AdminDashboard from './pages/dashboard/AdminDashboard'
 import EmployeeDashboard from './pages/dashboard/EmployeeDashboard'
-import { AIRule } from './components/ai-rule'
+import { AIRule, AISettings } from './components/ai-rule'
 import ProtectedRoute from './components/common/ProtectedRoute'
 
 // Root redirect component
@@ -129,6 +129,15 @@ function App() {
             element={
               <ProtectedRoute requiredRole="employee">
                 <AIRule />
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/ai-settings" 
+            element={
+              <ProtectedRoute requiredRole="employee">
+                <AISettings />
               </ProtectedRoute>
             } 
           />

@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django_celery_beat',  # For periodic task scheduling
     'Accounts',
     'User',
+    'Ai_processing',  # AI processing app for automated email handling
 ]
 
 MIDDLEWARE = [
@@ -183,3 +184,76 @@ CELERY_TIMEZONE = 'UTC'
 
 # Celery Beat Settings
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file_django': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'django.log',
+            'formatter': 'verbose',
+        },
+        'file_email': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'email_automation.log',
+            'formatter': 'verbose',
+        },
+        'file_ai': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'ai_processing.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file_django', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'User.tasks': {
+            'handlers': ['file_email', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'User.views': {
+            'handlers': ['file_email', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'Ai_processing.tasks': {
+            'handlers': ['file_ai', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'Ai_processing.views': {
+            'handlers': ['file_ai', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'Ai_processing.ai_service': {
+            'handlers': ['file_ai', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
