@@ -37,7 +37,10 @@ class GmailService:
             token_uri="https://oauth2.googleapis.com/token",
             client_id=os.environ.get('GOOGLE_CLIENT_ID'),
             client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
-            scopes=['https://www.googleapis.com/auth/gmail.readonly']
+            scopes=[
+                'https://www.googleapis.com/auth/gmail.readonly',
+                'https://www.googleapis.com/auth/gmail.send'
+            ]
         )
         self.service = None
     
@@ -187,6 +190,150 @@ class GmailService:
                 if part.get('filename'):
                     return True
         return False
+    
+    def send_email(self, from_email, to_emails, subject, body_html, body_plain=None, cc_emails=None, bcc_emails=None, 
+                   in_reply_to=None, references=None, thread_id=None):
+        """Send an email via Gmail API"""
+        try:
+            if not self.service:
+                if not self.build_service():
+                    raise Exception('Failed to initialize Gmail service')
+            
+            import base64
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            
+            # Create message
+            message = MIMEMultipart('alternative')
+            message['From'] = from_email
+            message['Subject'] = subject
+            message['To'] = ', '.join(to_emails) if isinstance(to_emails, list) else to_emails
+            
+            if cc_emails and len(cc_emails) > 0:
+                message['Cc'] = ', '.join(cc_emails) if isinstance(cc_emails, list) else cc_emails
+            if bcc_emails and len(bcc_emails) > 0:
+                message['Bcc'] = ', '.join(bcc_emails) if isinstance(bcc_emails, list) else bcc_emails
+            
+            # Add threading headers for replies
+            if in_reply_to:
+                message['In-Reply-To'] = in_reply_to
+            if references:
+                message['References'] = references
+            
+            # Add plain text part
+            if body_plain:
+                text_part = MIMEText(body_plain, 'plain', 'utf-8')
+                message.attach(text_part)
+            
+            # Add HTML part
+            if body_html:
+                html_part = MIMEText(body_html, 'html', 'utf-8')
+                message.attach(html_part)
+            
+            # Convert to Gmail API format
+            raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode('utf-8')
+            
+            gmail_message = {
+                'raw': raw_message
+            }
+            
+            # Add thread ID if this is a reply
+            if thread_id:
+                gmail_message['threadId'] = thread_id
+            
+            print(f"Sending email from {from_email} to {to_emails}")
+            print(f"Subject: {subject}")
+            print(f"Thread ID: {thread_id}")
+            
+            # Send the email
+            result = self.service.users().messages().send(
+                userId='me',
+                body=gmail_message
+            ).execute()
+            
+            print(f"Email sent successfully: {result}")
+            return result
+            
+        except Exception as e:
+            print(f"Error sending email: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            raise e
+    
+    def create_reply_message(self, original_email_data, reply_text, reply_type='reply'):
+        """Create a properly formatted reply message"""
+        try:
+            # Extract original email details
+            original_subject = original_email_data.get('subject', 'No Subject')
+            original_sender = original_email_data.get('sender', '')
+            original_recipients = original_email_data.get('recipients', [])
+            original_cc = original_email_data.get('cc', [])
+            original_body = original_email_data.get('body_plain') or original_email_data.get('body_html', '')
+            
+            # Format reply subject
+            reply_subject = original_subject
+            if not reply_subject.lower().startswith('re:'):
+                reply_subject = f"Re: {reply_subject}"
+            
+            # Determine recipients based on reply type
+            if reply_type == 'reply':
+                # Reply only to sender
+                reply_to = [original_sender] if original_sender else []
+                reply_cc = []
+            else:  # reply_all
+                # Reply to sender and include all original recipients
+                reply_to = [original_sender] if original_sender else []
+                reply_cc = []
+                
+                # Add original recipients to CC, excluding our own email
+                if isinstance(original_recipients, list):
+                    reply_cc.extend(original_recipients)
+                elif original_recipients:
+                    reply_cc.append(original_recipients)
+                    
+                if isinstance(original_cc, list):
+                    reply_cc.extend(original_cc)
+                elif original_cc:
+                    reply_cc.append(original_cc)
+                
+                # Remove duplicates and our own email address
+                reply_cc = list(set(reply_cc))
+                reply_cc = [email for email in reply_cc if email not in reply_to]
+            
+            # Format reply body with quoted original message
+            import html
+            from datetime import datetime
+            
+            reply_body_html = f"""
+            <div>{reply_text}</div>
+            <br>
+            <div>On {datetime.now().strftime('%Y-%m-%d %H:%M')}, {html.escape(original_sender)} wrote:</div>
+            <blockquote style="margin: 0 0 0 0.8ex; border-left: 1px #ccc solid; padding-left: 1ex;">
+                {original_body}
+            </blockquote>
+            """
+            
+            reply_body_plain = f"""
+{reply_text}
+
+On {datetime.now().strftime('%Y-%m-%d %H:%M')}, {original_sender} wrote:
+> {original_body.replace(chr(10), chr(10) + '> ')}
+            """
+            
+            return {
+                'subject': reply_subject,
+                'to_emails': reply_to,
+                'cc_emails': reply_cc,
+                'body_html': reply_body_html,
+                'body_plain': reply_body_plain,
+                'in_reply_to': original_email_data.get('gmail_message_id'),
+                'references': f"{original_email_data.get('references', '')} {original_email_data.get('gmail_message_id', '')}".strip(),
+                'thread_id': original_email_data.get('gmail_thread_id')
+            }
+            
+        except Exception as e:
+            print(f"Error creating reply message: {e}")
+            return None
 
 
 # Gmail OAuth Views
@@ -202,7 +349,7 @@ class GmailOAuthView(APIView):
             # Google OAuth 2.0 configuration
             client_id = os.environ.get('GOOGLE_CLIENT_ID')
             redirect_uri = 'http://localhost:8000/api/auth/gmail/callback/'
-            scope = 'https://www.googleapis.com/auth/gmail.readonly'
+            scope = 'https://www.googleapis.com/auth/gmail.readonly%20https://www.googleapis.com/auth/gmail.send'
             
             # Generate OAuth URL
             oauth_url = (
@@ -359,7 +506,7 @@ class ConnectEmailView(APIView):
                 # Initiate OAuth flow - return the OAuth URL
                 client_id = os.environ.get('GOOGLE_CLIENT_ID')
                 redirect_uri = 'http://localhost:8000/api/auth/gmail/callback/'
-                scope = 'https://www.googleapis.com/auth/gmail.readonly'
+                scope = 'https://www.googleapis.com/auth/gmail.readonly%20https://www.googleapis.com/auth/gmail.send'
                 
                 # Add state parameter to identify the user
                 state = str(request.user.id)
@@ -846,4 +993,187 @@ class DisconnectEmailAccountView(APIView):
         except Exception as e:
             return Response({
                 'message': f'Failed to disconnect email account: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ReplyToEmailView(APIView):
+    """Reply to an email"""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, email_id):
+        try:
+            # Get the original email
+            try:
+                original_email = EmailMessage.objects.select_related('email_account').get(
+                    id=email_id,
+                    email_account__user=request.user
+                )
+            except EmailMessage.DoesNotExist:
+                return Response({
+                    'message': 'Original email not found'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Get reply data
+            reply_text = request.data.get('reply_text')
+            reply_type = request.data.get('reply_type', 'reply')  # 'reply' or 'reply_all'
+            
+            if not reply_text:
+                return Response({
+                    'message': 'Reply text is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if reply_type not in ['reply', 'reply_all']:
+                return Response({
+                    'message': 'Invalid reply type. Use "reply" or "reply_all"'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check if we have valid tokens for the email account
+            email_account = original_email.email_account
+            if not email_account.access_token:
+                return Response({
+                    'message': 'No access token available for this email account'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Initialize Gmail service
+            gmail_service = GmailService(
+                email_account.access_token,
+                email_account.refresh_token
+            )
+            
+            # Prepare original email data for reply
+            original_email_data = {
+                'subject': original_email.subject,
+                'sender': original_email.sender,
+                'recipients': original_email.get_recipients_list(),
+                'cc': original_email.get_cc_list(),
+                'body_html': original_email.body_html,
+                'body_plain': original_email.body_plain,
+                'gmail_message_id': original_email.gmail_message_id,
+                'gmail_thread_id': original_email.gmail_thread_id,
+                'references': original_email.references
+            }
+            
+            # Create reply message
+            reply_message_data = gmail_service.create_reply_message(
+                original_email_data, 
+                reply_text, 
+                reply_type
+            )
+            
+            if not reply_message_data:
+                return Response({
+                    'message': 'Failed to create reply message'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            # Send the reply
+            try:
+                send_result = gmail_service.send_email(
+                    from_email=email_account.email_address,
+                    to_emails=reply_message_data['to_emails'],
+                    subject=reply_message_data['subject'],
+                    body_html=reply_message_data['body_html'],
+                    body_plain=reply_message_data['body_plain'],
+                    cc_emails=reply_message_data['cc_emails'],
+                    in_reply_to=reply_message_data['in_reply_to'],
+                    references=reply_message_data['references'],
+                    thread_id=reply_message_data['thread_id']
+                )
+            except Exception as send_error:
+                print(f"Error sending reply email: {str(send_error)}")
+                import traceback
+                traceback.print_exc()
+                return Response({
+                    'message': f'Failed to send reply email: {str(send_error)}'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            if not send_result:
+                return Response({
+                    'message': 'Failed to send reply email - no result returned from Gmail API'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            # Store the reply in our database
+            reply_email = EmailMessage.objects.create(
+                email_account=email_account,
+                gmail_message_id=send_result.get('id', ''),
+                gmail_thread_id=send_result.get('threadId', original_email.gmail_thread_id),
+                subject=reply_message_data['subject'],
+                sender=email_account.email_address,
+                recipients=json.dumps(reply_message_data['to_emails']),
+                cc=json.dumps(reply_message_data['cc_emails']) if reply_message_data['cc_emails'] else '',
+                body_html=reply_message_data['body_html'],
+                body_plain=reply_message_data['body_plain'],
+                received_at=timezone.now(),
+                message_type='reply',
+                parent_email=original_email,
+                conversation_id=original_email.gmail_thread_id,
+                in_reply_to=original_email.gmail_message_id,
+                references=reply_message_data['references'],
+                is_read=True  # Our own sent emails are marked as read
+            )
+            
+            return Response({
+                'message': 'Reply sent successfully',
+                'reply_id': reply_email.id,
+                'gmail_message_id': send_result.get('id', ''),
+                'thread_id': send_result.get('threadId', ''),
+                'recipients': reply_message_data['to_emails'],
+                'cc_recipients': reply_message_data['cc_emails']
+            })
+            
+        except Exception as e:
+            return Response({
+                'message': f'Failed to send reply: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetEmailRepliesView(APIView):
+    """Get all replies for a specific email thread"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, email_id):
+        try:
+            # Get the original email
+            try:
+                original_email = EmailMessage.objects.select_related('email_account').get(
+                    id=email_id,
+                    email_account__user=request.user
+                )
+            except EmailMessage.DoesNotExist:
+                return Response({
+                    'message': 'Email not found'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Get all emails in the same conversation/thread
+            thread_emails = EmailMessage.objects.filter(
+                email_account__user=request.user,
+                gmail_thread_id=original_email.gmail_thread_id
+            ).order_by('received_at')
+            
+            # Format response
+            emails_data = []
+            for email in thread_emails:
+                emails_data.append({
+                    'id': email.id,
+                    'subject': email.subject,
+                    'sender': email.sender,
+                    'recipients': email.get_recipients_list(),
+                    'cc': email.get_cc_list(),
+                    'received_at': email.received_at.isoformat(),
+                    'message_type': email.message_type,
+                    'is_read': email.is_read,
+                    'body_html': email.body_html,
+                    'body_plain': email.body_plain,
+                    'parent_email_id': email.parent_email.id if email.parent_email else None
+                })
+            
+            return Response({
+                'original_email_id': email_id,
+                'thread_id': original_email.gmail_thread_id,
+                'conversation_emails': emails_data,
+                'total_emails': len(emails_data)
+            })
+            
+        except Exception as e:
+            return Response({
+                'message': f'Failed to get email replies: {str(e)}'
             }, status=status.HTTP_400_BAD_REQUEST)
