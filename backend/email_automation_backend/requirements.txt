@@ -1,3 +1,7 @@
+# celery beat = celery -A email_automation_backend beat --loglevel=info
+# celery worker = celery -A email_automation_backend worker --loglevel=info --pool=threads
+
+
 Django==5.2.4
 djangorestframework==3.15.2
 django-cors-headers==4.6.0
