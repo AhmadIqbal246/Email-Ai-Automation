@@ -47,12 +47,24 @@ class EmailMessage(models.Model):
         NORMAL = 'normal', 'Normal'
         HIGH = 'high', 'High'
     
+    class MessageType(models.TextChoices):
+        RECEIVED = 'received', 'Received'
+        SENT = 'sent', 'Sent'
+        REPLY = 'reply', 'Reply'
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email_account = models.ForeignKey(EmailAccount, on_delete=models.CASCADE, related_name='messages')
     
     # Gmail specific
     gmail_message_id = models.CharField(max_length=100, unique=True)
     gmail_thread_id = models.CharField(max_length=100, blank=True)
+    
+    # Email threading and conversation tracking
+    parent_email = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    conversation_id = models.CharField(max_length=100, blank=True)  # For grouping related emails
+    message_type = models.CharField(max_length=20, choices=MessageType.choices, default=MessageType.RECEIVED)
+    in_reply_to = models.CharField(max_length=255, blank=True)  # Original message ID header
+    references = models.TextField(blank=True)  # Full chain of message references
     
     # Email content
     subject = models.CharField(max_length=500)

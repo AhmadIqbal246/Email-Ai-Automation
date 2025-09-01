@@ -1,13 +1,16 @@
 import { useState } from 'react'
+import EmailReplyModal from './EmailReplyModal'
 
 const EmailModal = ({ 
   isOpen, 
   onClose, 
   email, 
   content, 
-  loading 
+  loading,
+  onSendReply 
 }) => {
   const [showFullHeaders, setShowFullHeaders] = useState(false)
+  const [showReplyModal, setShowReplyModal] = useState(false)
 
   if (!isOpen) return null
 
@@ -168,21 +171,33 @@ const EmailModal = ({
             >
               Close
             </button>
-            {email && (
-              <button
-                onClick={() => {
-                  // Optional: Add reply functionality in the future
-                  console.log('Reply to email:', email.id)
-                }}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-                disabled
-              >
-                Reply (Coming Soon)
-              </button>
+            {email && onSendReply && (
+              <>
+                <button
+                  onClick={() => setShowReplyModal(true)}
+                  className="group relative inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-sm font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
+                  <div className="relative flex items-center">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                    <span>Reply</span>
+                  </div>
+                </button>
+              </>
             )}
           </div>
         </div>
       </div>
+      
+      {/* Reply Modal */}
+      <EmailReplyModal
+        isOpen={showReplyModal}
+        onClose={() => setShowReplyModal(false)}
+        originalEmail={email}
+        onSendReply={onSendReply}
+      />
     </div>
   )
 }

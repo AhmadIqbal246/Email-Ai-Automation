@@ -429,6 +429,45 @@ const EmployeeDashboard = () => {
     }
   }
 
+  const handleSendReply = async (replyData) => {
+    try {
+      if (!selectedEmail) {
+        throw new Error('No email selected for reply')
+      }
+
+      console.log('Sending reply to email:', selectedEmail.id, replyData)
+      
+      const response = await fetch(`${ENV.API_BASE_URL}/api/reply-to-email/${selectedEmail.id}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify(replyData)
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Reply sent successfully:', data)
+        
+        setSuccess(data.message || 'Reply sent successfully!')
+        
+        // Refresh emails to show the new reply
+        setTimeout(() => {
+          fetchEmails()
+        }, 1000)
+      } else {
+        const errorData = await response.json()
+        console.error('Reply failed:', response.status, errorData)
+        throw new Error(errorData.message || 'Failed to send reply')
+      }
+    } catch (error) {
+      console.error('Failed to send reply:', error)
+      setError(`Error sending reply: ${error.message}`)
+      throw error // Re-throw to let the modal handle the error state
+    }
+  }
+
 
   // Custom action for navbar
   const customActions = (
@@ -776,6 +815,7 @@ const EmployeeDashboard = () => {
         email={selectedEmail}
         content={emailContent}
         loading={loading && showEmailModal}
+        onSendReply={handleSendReply}
       />
     </div>
   )
