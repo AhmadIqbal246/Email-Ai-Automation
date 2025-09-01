@@ -240,7 +240,7 @@ const EmailList = ({
               </div>
               
               {/* Email List */}
-              <div className="space-y-4 mb-8">
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-8">
                 {currentEmails.map((email, index) => (
                   <EmailListItem
                     key={email.id}
@@ -322,7 +322,7 @@ const EmailList = ({
   )
 }
 
-// Ultra-luxury EmailListItem component with staggered animations
+// Compact EmailListItem component matching the design from the image
 const EmailListItem = ({ email, onClick, index }) => {
   const formatTime = (dateString) => {
     const date = new Date(dateString)
@@ -332,7 +332,11 @@ const EmailListItem = ({ email, onClick, index }) => {
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
     const diffMins = Math.floor(diffMs / (1000 * 60))
     
-    if (diffDays > 0) return `${diffDays}d ago`
+    if (diffDays > 0) {
+      const month = date.toLocaleDateString('en-US', { month: 'short' })
+      const day = date.getDate()
+      return `${month} ${day}`
+    }
     if (diffHours > 0) return `${diffHours}h ago`
     if (diffMins > 0) return `${diffMins}m ago`
     return 'Just now'
@@ -340,135 +344,44 @@ const EmailListItem = ({ email, onClick, index }) => {
 
   const getSenderName = (sender) => {
     const match = sender.match(/^(.+?)\s*<.*>$/)
-    return match ? match[1].trim().replace(/^"|"$/g, '') : sender.split('@')[0]
+    return match ? match[1].trim().replace(/^\"|\"$/g, '') : sender.split('@')[0]
   }
 
   return (
     <div 
       onClick={onClick}
-      style={{ animationDelay: `${index * 50}ms` }}
-      className={`group relative overflow-hidden cursor-pointer transition-all duration-500 transform hover:scale-[1.02] hover:-translate-y-1 animate-fade-in-up ${
-        !email.is_read 
-          ? 'hover:shadow-2xl' 
-          : 'hover:shadow-xl'
-      }`}
+      className="group flex items-center py-3 px-4 cursor-pointer hover:bg-gray-50 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
     >
-      {/* Premium Card Background */}
-      <div className={`relative p-6 rounded-3xl backdrop-blur-sm transition-all duration-500 ${
-        !email.is_read 
-          ? 'bg-gradient-to-br from-blue-50/80 via-indigo-50/60 to-purple-50/40 border border-blue-200/50 shadow-lg'
-          : 'bg-white/60 border border-gray-200/50 shadow-md hover:bg-white/80'
-      }`}>
-        
-        {/* Animated Background Effects */}
-        <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-          <div className={`absolute inset-0 rounded-3xl ${
-            !email.is_read 
-              ? 'bg-gradient-to-br from-blue-100/30 via-indigo-100/20 to-purple-100/30'
-              : 'bg-gradient-to-br from-gray-100/20 via-white/10 to-blue-50/20'
-          }`}></div>
+      {/* Sender Name */}
+      <div className="w-44 flex-shrink-0">
+        <div className={`text-sm truncate ${
+          !email.is_read 
+            ? 'font-bold text-gray-900' 
+            : 'font-normal text-gray-700'
+        }`}>
+          {getSenderName(email.sender)}
         </div>
-        
-        {/* Unread Indicator Line */}
-        {!email.is_read && (
-          <div className="absolute left-0 top-6 bottom-6 w-1 bg-gradient-to-b from-blue-500 via-indigo-500 to-purple-500 rounded-full shadow-lg animate-pulse"></div>
-        )}
-        
-        {/* Content */}
-        <div className="relative flex items-start justify-between space-x-6">
-          <div className="flex-1 space-y-3">
-            {/* Header Row */}
-            <div className="flex items-center space-x-3">
-              {/* Status Indicator */}
-              <div className={`relative w-3 h-3 rounded-full shadow-lg ${
-                !email.is_read 
-                  ? 'bg-gradient-to-r from-blue-400 to-indigo-500 animate-pulse' 
-                  : 'bg-gray-300'
-              }`}>
-                {!email.is_read && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full animate-ping"></div>
-                )}
-              </div>
-              
-              {/* Subject */}
-              <h4 className={`text-lg leading-tight transition-colors duration-300 ${
-                !email.is_read 
-                  ? 'font-bold bg-gradient-to-r from-gray-900 via-indigo-800 to-purple-800 bg-clip-text text-transparent' 
-                  : 'font-semibold text-gray-700 group-hover:text-gray-900'
-              }`}>
-                {email.subject || 'No Subject'}
-              </h4>
-            </div>
-            
-            {/* Sender and Time */}
-            <div className="flex items-center space-x-4">
-              <div className={`text-sm font-medium transition-colors duration-300 ${
-                !email.is_read ? 'text-indigo-700' : 'text-gray-600 group-hover:text-gray-800'
-              }`}>
-                {getSenderName(email.sender)}
-              </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{formatTime(email.received_at)}</span>
-              </div>
-            </div>
-            
-            {/* Tags */}
-            <div className="flex items-center flex-wrap gap-2">
-              {email.has_attachments && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 shadow-sm border border-emerald-200/50">
-                  <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                  </svg>
-                  Attachment
-                </span>
-              )}
-              {email.is_starred && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 shadow-sm border border-amber-200/50">
-                  <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  Starred
-                </span>
-              )}
-            </div>
-          </div>
-          
-          {/* Right Side Actions */}
-          <div className="flex flex-col items-end space-y-3">
-            {/* Status Badge */}
-            {!email.is_read ? (
-              <span className="inline-flex items-center px-4 py-2 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform hover:scale-105 transition-transform duration-200">
-                <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
-                UNREAD
-              </span>
-            ) : (
-              <span className="inline-flex items-center px-4 py-2 rounded-full text-xs font-medium bg-gray-100/80 text-gray-600 backdrop-blur-sm">
-                <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
-                READ
-              </span>
-            )}
-            
-            {/* Open Button */}
-            <button 
-              onClick={(e) => {
-                e.stopPropagation()
-                onClick()
-              }}
-              className="group/btn relative inline-flex items-center px-5 py-2.5 bg-white/80 backdrop-blur-sm text-gray-700 font-semibold rounded-xl shadow-lg hover:shadow-xl border border-white/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5 hover:bg-white/90"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-100/50 to-purple-100/50 rounded-xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-              <div className="relative flex items-center">
-                <svg className="w-4 h-4 mr-2 transition-transform duration-200 group-hover/btn:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span>Open</span>
-              </div>
-            </button>
-          </div>
+      </div>
+      
+      {/* Subject */}
+      <div className="flex-1 mx-4">
+        <div className={`text-sm truncate ${
+          !email.is_read 
+            ? 'font-bold text-gray-900' 
+            : 'font-normal text-gray-600'
+        }`}>
+          {email.subject || 'No Subject'}
+        </div>
+      </div>
+      
+      {/* Timestamp */}
+      <div className="w-20 flex-shrink-0 text-right">
+        <div className={`text-xs ${
+          !email.is_read 
+            ? 'font-semibold text-gray-800' 
+            : 'font-normal text-gray-500'
+        }`}>
+          {formatTime(email.received_at)}
         </div>
       </div>
     </div>
