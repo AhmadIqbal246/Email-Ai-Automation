@@ -5,6 +5,7 @@ import { logoutUser } from '../../redux/authSlice'
 import Navbar from '../../components/mutual/Navbar'
 import EmailModal from '../../components/reusable/EmailModal'
 import EmailList from '../../components/reusable/EmailList'
+import AlertMessage from '../../components/reusable/AlertMessage'
 import CurrentEmployees from '../../components/admin/CurrentEmployees'
 import InviteEmployee from '../../components/admin/InviteEmployee'
 import PendingInvitations from '../../components/admin/PendingInvitations'
@@ -691,81 +692,12 @@ const AdminDashboard = () => {
         title="Admin Dashboard"
         userRole="admin"
         onLogout={handleLogout}
-        showLogoutButton={true}
         showAdminNav={true}
         activeSection={activeSection}
         onNavigate={handleNavigate}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Error and Success Messages */}
-        {error && (
-          <div className="mb-8 relative overflow-hidden animate-fade-in-up">
-            <div className="relative p-6 bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-red-200/50">
-              <div className="absolute inset-0 bg-gradient-to-r from-red-50/50 to-rose-50/50 rounded-3xl"></div>
-              <div className="relative flex items-center">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-rose-500 rounded-2xl blur-lg opacity-30 animate-pulse"></div>
-                  <div className="relative w-12 h-12 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center shadow-xl">
-                    <svg className="w-6 h-6 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-4 flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-lg font-bold bg-gradient-to-r from-red-700 to-rose-800 bg-clip-text text-transparent">Error</span>
-                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  </div>
-                  <p className="text-red-700 font-medium leading-relaxed">{error}</p>
-                </div>
-                <button 
-                  onClick={() => setError('')}
-                  className="group relative p-2.5 bg-white/60 backdrop-blur-sm hover:bg-white/80 rounded-xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-0.5 shadow-lg hover:shadow-xl border border-white/50"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-100/50 to-rose-100/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <svg className="relative w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {success && (
-          <div className="mb-8 relative overflow-hidden animate-fade-in-up">
-            <div className="relative p-6 bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-green-200/50">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-50/50 to-green-50/50 rounded-3xl"></div>
-              <div className="relative flex items-center">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-green-500 rounded-2xl blur-lg opacity-30 animate-pulse"></div>
-                  <div className="relative w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-xl">
-                    <svg className="w-6 h-6 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-4 flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-lg font-bold bg-gradient-to-r from-emerald-700 to-green-800 bg-clip-text text-transparent">Success</span>
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                  </div>
-                  <p className="text-green-700 font-medium leading-relaxed">{success}</p>
-                </div>
-                <button 
-                  onClick={() => setSuccess('')}
-                  className="group relative p-2.5 bg-white/60 backdrop-blur-sm hover:bg-white/80 rounded-xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-0.5 shadow-lg hover:shadow-xl border border-white/50"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-100/50 to-green-100/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <svg className="relative w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
         
         {/* Render Active Section */}
         {renderSection()}
@@ -821,6 +753,21 @@ const AdminDashboard = () => {
         content={emailContent}
         loading={loading && showEmailModal}
         onSendReply={handleSendReply}
+      />
+      
+      {/* Alert Messages */}
+      <AlertMessage 
+        type="error"
+        message={error}
+        isVisible={!!error}
+        onClose={() => setError('')}
+      />
+      
+      <AlertMessage 
+        type="success"
+        message={success}
+        isVisible={!!success}
+        onClose={() => setSuccess('')}
       />
     </div>
   )
