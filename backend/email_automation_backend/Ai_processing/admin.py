@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import AIProcessingSettings, EmailProcessingLog, AIPromptTemplate
+from .models import AIProcessingSettings, EmailProcessingLog
 
 @admin.register(AIProcessingSettings)
 class AIProcessingSettingsAdmin(admin.ModelAdmin):
@@ -65,30 +65,3 @@ class EmailProcessingLogAdmin(admin.ModelAdmin):
         })
     )
 
-@admin.register(AIPromptTemplate)
-class AIPromptTemplateAdmin(admin.ModelAdmin):
-    list_display = ['name', 'user', 'is_active', 'is_default', 'priority', 'created_at']
-    list_filter = ['is_active', 'is_default', 'created_at']
-    search_fields = ['name', 'description', 'user__email', 'email_keywords', 'sender_patterns']
-    readonly_fields = ['created_at', 'updated_at']
-    
-    fieldsets = (
-        ('Template Info', {
-            'fields': ('user', 'name', 'description')
-        }),
-        ('Template Content', {
-            'fields': ('prompt_text',),
-            'classes': ('wide',)
-        }),
-        ('Trigger Conditions', {
-            'fields': ('email_keywords', 'sender_patterns'),
-            'classes': ('wide',)
-        }),
-        ('Settings', {
-            'fields': ('is_active', 'is_default', 'priority')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        })
-    )

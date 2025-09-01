@@ -11,7 +11,7 @@ const AISettings = () => {
   const navigate = useNavigate()
   const [settings, setSettings] = useState({
     is_enabled: true,
-    auto_reply_enabled: true,
+    auto_reply_enabled: false,  // Default to safer setting
     default_prompt: '',
     max_response_length: 500,
     response_tone: 'professional'
@@ -89,8 +89,29 @@ const AISettings = () => {
     navigate('/login')
   }
 
+  const validateSettings = () => {
+    if (!settings.default_prompt.trim()) {
+      return 'Default prompt cannot be empty'
+    }
+    if (settings.default_prompt.length > 2000) {
+      return 'Default prompt cannot exceed 2000 characters'
+    }
+    if (settings.max_response_length < 50 || settings.max_response_length > 2000) {
+      return 'Max response length must be between 50 and 2000 characters'
+    }
+    return null
+  }
+
   const handleUpdateSettings = async (e) => {
     e.preventDefault()
+    
+    // Client-side validation
+    const validationError = validateSettings()
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
     setLoading(true)
     setError('')
     setSuccess('')
@@ -108,7 +129,9 @@ const AISettings = () => {
       if (response.ok) {
         const data = await response.json()
         setSettings(data.settings)
-        setSuccess('AI settings updated successfully')
+        setSuccess('AI settings updated successfully! Changes will take effect for new emails.')
+        // Clear success message after 5 seconds
+        setTimeout(() => setSuccess(''), 5000)
       } else {
         const errorData = await response.json()
         setError(errorData.message || 'Failed to update AI settings')
@@ -162,6 +185,30 @@ const AISettings = () => {
       ...settings,
       [name]: type === 'checkbox' ? checked : value
     })
+  }
+
+  const handleResetToDefault = () => {
+    if (window.confirm('Are you sure you want to reset all AI settings to default values? This will overwrite your current settings.')) {
+      setSettings({
+        is_enabled: true,
+        auto_reply_enabled: false,
+        default_prompt: `You are a professional email assistant. Your task is to analyze the incoming email and generate an appropriate response.
+
+Please follow these guidelines:
+1. Analyze the email content, tone, and intent
+2. Determine the appropriate response tone (professional, friendly, formal)
+3. Generate a helpful, accurate, and contextually appropriate reply
+4. Keep responses concise but complete
+5. Be polite and professional in all communications
+6. If the email requires specific information you don't have, politely indicate that you'll need to gather more details
+
+Always respond in a helpful and professional manner.`,
+        max_response_length: 500,
+        response_tone: 'professional'
+      })
+      setError('')
+      setSuccess('Settings reset to default values. Click "Update AI Settings" to save.')
+    }
   }
 
   const handleBackToDashboard = () => {
@@ -415,27 +462,47 @@ const AISettings = () => {
                   </div>
                 </div>
 
-                <button 
-                  type="submit" 
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-4 rounded-lg font-semibold 
-                           hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
-                           transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]
-                           disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                           shadow-lg hover:shadow-xl"
-                >
-                  {loading ? (
+                <div className="flex space-x-4">
+                  <button
+                    type="button"
+                    onClick={handleResetToDefault}
+                    disabled={loading}
+                    className="flex-1 bg-gray-600 text-white py-3 px-4 rounded-lg font-semibold
+                             hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+                             transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]
+                             disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+                             shadow-lg hover:shadow-xl"
+                  >
                     <div className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      Updating Settings...
+                      Reset to Default
                     </div>
-                  ) : (
-                    'Update AI Settings'
-                  )}
-                </button>
+                  </button>
+
+                  <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-4 rounded-lg font-semibold 
+                             hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
+                             transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]
+                             disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+                             shadow-lg hover:shadow-xl"
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Updating Settings...
+                      </div>
+                    ) : (
+                      'Update AI Settings'
+                    )}
+                  </button>
+                </div>
               </form>
             </div>
           </div>
