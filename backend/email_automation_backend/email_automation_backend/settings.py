@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_celery_beat',  # For periodic task scheduling
     'Accounts',
+    'hubspot_integration',  # HubSpot integration app (moved to root level)
     'User',
     'Ai_processing',  # AI processing app for automated email handling
 ]
@@ -159,6 +160,17 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 
 # HubSpot API Settings
 HUBSPOT_API_BASE_URL = 'https://api.hubapi.com'
+HUBSPOT_CLIENT_ID = os.getenv('HUBSPOT_CLIENT_ID', 'c0b80609-3fee-405b-ae6e-edd9a879abf0')
+HUBSPOT_CLIENT_SECRET = os.getenv('HUBSPOT_CLIENT_SECRET', 'e4dd5c6d-db63-4435-b084-6341e28d0a4d')
+HUBSPOT_REDIRECT_URI = os.getenv('HUBSPOT_REDIRECT_URI', 'http://localhost:8000/api/hubspot/oauth/callback/')
+
+# HubSpot OAuth Scopes - Updated to match app configuration
+# These scopes must match exactly what's configured in your HubSpot app
+HUBSPOT_OAUTH_SCOPES = [
+    'crm.objects.contacts.read',  # Read contact data
+    'crm.objects.contacts.write', # Write/create contact data
+    'oauth'                       # Required for authentication
+]
 
 # Frontend URL for invitation links
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')

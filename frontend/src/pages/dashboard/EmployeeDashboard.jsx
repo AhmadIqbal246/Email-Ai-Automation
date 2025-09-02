@@ -7,6 +7,7 @@ import Navbar from '../../components/mutual/Navbar'
 import EmailModal from '../../components/reusable/EmailModal'
 import EmailList from '../../components/reusable/EmailList'
 import AlertMessage from '../../components/reusable/AlertMessage'
+import HubSpotIntegration from '../../components/hubspot/HubSpotIntegration'
 import ENV from '../../../config'
 
 const EmployeeDashboard = () => {
@@ -506,8 +507,12 @@ const EmployeeDashboard = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Left Column - Email Accounts */}
-          <div className="lg:col-span-1">
+          {/* Left Column - Email Accounts and HubSpot */}
+          <div className="lg:col-span-1 space-y-8">
+            {/* HubSpot Integration Section */}
+            <HubSpotIntegration />
+            
+            {/* Email Accounts Section */}
             <div className="relative overflow-hidden animate-fade-in-up">
               {/* Glassmorphism Container */}
               <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-700 group overflow-hidden">
