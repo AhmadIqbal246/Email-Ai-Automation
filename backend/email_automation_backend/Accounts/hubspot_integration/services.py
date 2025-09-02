@@ -485,3 +485,188 @@ class HubSpotContactService:
             'pending_contacts': pending_contacts,
             'last_sync': self.hubspot_account.last_sync_at
         }
+    
+    def sync_email_sender_with_details(self, email_message, sender_details):
+        """Sync email sender with enhanced details to HubSpot"""
+        try:
+            # Extract sender information from enhanced details
+            sender_email = sender_details.get('email', email_message.sender)
+            first_name = sender_details.get('first_name', '')
+            last_name = sender_details.get('last_name', '')
+            company_name = sender_details.get('company', '')
+            phone = sender_details.get('phone', '')
+            job_title = sender_details.get('job_title', '')
+            website = sender_details.get('website', '')
+            
+            # Check if we already have this contact
+            hubspot_contact, created = HubSpotContact.objects.get_or_create(
+                hubspot_account=self.hubspot_account,
+                email_address=sender_email,
+                defaults={
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'company_name': company_name,
+                    'phone': phone,
+                    'job_title': job_title,
+                    'website': website,
+                    'first_email_date': email_message.received_at,
+                    'last_email_date': email_message.received_at,
+                    'total_emails_received': 1
+                }
+            )
+            
+            if not created:
+                # Update existing contact with new information (only if not already set)
+                updated = False
+                
+                if not hubspot_contact.first_name and first_name:
+                    hubspot_contact.first_name = first_name
+                    updated = True
+                if not hubspot_contact.last_name and last_name:
+                    hubspot_contact.last_name = last_name
+                    updated = True
+                if not hubspot_contact.company_name and company_name:
+                    hubspot_contact.company_name = company_name
+                    updated = True
+                if not hubspot_contact.phone and phone:
+                    hubspot_contact.phone = phone
+                    updated = True
+                if not hubspot_contact.job_title and job_title:
+                    hubspot_contact.job_title = job_title
+                    updated = True
+                if not hubspot_contact.website and website:
+                    hubspot_contact.website = website
+                    updated = True
+                
+                # Always update email tracking
+                hubspot_contact.last_email_date = email_message.received_at
+                hubspot_contact.total_emails_received += 1
+                updated = True
+                
+                if updated:
+                    hubspot_contact.save()
+            
+            # Sync to HubSpot if not already synced or needs update
+            if (hubspot_contact.sync_status in [HubSpotContact.SyncStatus.PENDING, HubSpotContact.SyncStatus.FAILED] or
+                not hubspot_contact.hubspot_contact_id):
+                self._sync_contact_to_hubspot_with_details(hubspot_contact, sender_details)
+            
+            return hubspot_contact
+            
+        except Exception as e:
+            logger.error(f"Failed to sync email sender with details {sender_email}: {str(e)}")
+            raise
+    
+    def _sync_contact_to_hubspot_with_details(self, hubspot_contact, sender_details):
+        """Sync a contact record to HubSpot with enhanced details"""
+        try:
+            api_service = HubSpotAPIService(self.hubspot_account)
+            
+            # Prepare enhanced properties
+            properties = {
+                'email': hubspot_contact.email_address,
+                'firstname': hubspot_contact.first_name,
+                'lastname': hubspot_contact.last_name,
+                'company': hubspot_contact.company_name,
+                'phone': hubspot_contact.phone,
+                'hs_lead_status': 'NEW',
+                'lifecyclestage': 'lead'
+            }
+            
+            # Add custom properties from enhanced details
+            if hubspot_contact.job_title:
+                properties['jobtitle'] = hubspot_contact.job_title
+            
+            if hubspot_contact.website:
+                properties['website'] = hubspot_contact.website
+            
+            # Add email tracking properties
+            properties['notes_last_contacted'] = hubspot_contact.last_email_date.isoformat() if hubspot_contact.last_email_date else None
+            
+            # Add source information
+            properties['hs_analytics_source'] = 'EMAIL_AUTOMATION'
+            properties['hs_analytics_source_data_1'] = 'Automatic email sender detection'
+            
+            # Check if contact exists in HubSpot
+            existing_contact = api_service.search_contact_by_email(hubspot_contact.email_address)
+            
+            if existing_contact:
+                # Update existing contact
+                contact_id = existing_contact['id']
+                
+                # Only update properties that are not already set in HubSpot
+                update_properties = {}
+                existing_props = existing_contact.get('properties', {})
+                
+                for key, value in properties.items():
+                    if value and not existing_props.get(key):
+                        update_properties[key] = value
+                
+                if update_properties:
+                    hubspot_data = api_service.update_contact(contact_id, update_properties)
+                else:
+                    hubspot_data = existing_contact
+                
+            else:
+                # Create new contact
+                # Remove None values
+                clean_properties = {k: v for k, v in properties.items() if v is not None}
+                hubspot_data = api_service.create_contact(
+                    email=hubspot_contact.email_address,
+                    first_name=hubspot_contact.first_name,
+                    last_name=hubspot_contact.last_name,
+                    company=hubspot_contact.company_name,
+                    phone=hubspot_contact.phone
+                )
+            
+            # Update local contact record
+            hubspot_contact.hubspot_contact_id = hubspot_data.get('id')
+            hubspot_contact.sync_status = HubSpotContact.SyncStatus.SYNCED
+            hubspot_contact.last_synced_at = timezone.now()
+            hubspot_contact.sync_error_message = ''
+            hubspot_contact.save()
+            
+            logger.info(f"Successfully synced enhanced contact {hubspot_contact.email_address} to HubSpot")
+            
+        except Exception as e:
+            # Update contact with error status
+            hubspot_contact.sync_status = HubSpotContact.SyncStatus.FAILED
+            hubspot_contact.sync_error_message = str(e)
+            hubspot_contact.save()
+            
+            logger.error(f"Failed to sync enhanced contact {hubspot_contact.email_address}: {str(e)}")
+            raise
+    
+    def log_email_interaction(self, hubspot_contact, email_message, interaction_type='received'):
+        """Log email interaction in HubSpot (if supported)"""
+        try:
+            # For now, we'll log this as a note on the contact
+            # Future enhancement: Use HubSpot's Engagements API for email activities
+            
+            if not hubspot_contact.hubspot_contact_id:
+                logger.warning(f"Cannot log interaction - contact {hubspot_contact.email_address} not synced to HubSpot")
+                return
+            
+            api_service = HubSpotAPIService(self.hubspot_account)
+            
+            # Prepare interaction note
+            subject_preview = email_message.subject[:100] + '...' if len(email_message.subject) > 100 else email_message.subject
+            interaction_note = f"Email {interaction_type}: {subject_preview} (Received: {email_message.received_at.strftime('%Y-%m-%d %H:%M')})"
+            
+            # Try to update the contact with the latest interaction note
+            try:
+                properties = {
+                    'notes_last_contacted': email_message.received_at.isoformat(),
+                    'notes_last_activity_date': email_message.received_at.isoformat(),
+                    'hs_analytics_last_touch_converting_campaign': f"Email from {email_message.sender}"
+                }
+                
+                api_service.update_contact(hubspot_contact.hubspot_contact_id, properties)
+                logger.info(f"Logged email interaction for contact {hubspot_contact.email_address}")
+                
+            except Exception as update_error:
+                logger.warning(f"Failed to log email interaction: {str(update_error)}")
+                
+        except Exception as e:
+            logger.error(f"Error logging email interaction for {hubspot_contact.email_address}: {str(e)}")
+            # Don't raise here - interaction logging is not critical

@@ -81,6 +81,8 @@ class HubSpotContact(models.Model):
     last_name = models.CharField(max_length=100, blank=True)
     company_name = models.CharField(max_length=255, blank=True)
     phone = models.CharField(max_length=50, blank=True)
+    job_title = models.CharField(max_length=255, blank=True)
+    website = models.URLField(blank=True)
     
     # Sync Information
     sync_status = models.CharField(max_length=20, choices=SyncStatus.choices, default=SyncStatus.PENDING)

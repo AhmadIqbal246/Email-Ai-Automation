@@ -167,7 +167,8 @@ HUBSPOT_REDIRECT_URI = os.getenv('HUBSPOT_REDIRECT_URI', 'http://localhost:8000/
 # HubSpot OAuth Scopes - Updated to match app configuration
 # These scopes must match exactly what's configured in your HubSpot app
 HUBSPOT_OAUTH_SCOPES = [
-    'crm.objects.contacts.read',  # Read contact data (required scope from your app)
+    'crm.objects.contacts.read',  # Read contact data
+    'crm.objects.contacts.write', # Write/create contact data
     'oauth'                       # Required for authentication
 ]
 
