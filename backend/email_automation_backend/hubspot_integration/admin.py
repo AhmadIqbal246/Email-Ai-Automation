@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import HubSpotAccount, HubSpotContact, HubSpotSyncLog
 
-# Register your models here.
+admin.site.register(HubSpotAccount)
+admin.site.register(HubSpotContact)
+admin.site.register(HubSpotSyncLog)

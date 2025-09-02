@@ -16,34 +16,23 @@ class HubSpotAccount(models.Model):
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='hubspot_account')
-    
-    # HubSpot Account Details
     hubspot_user_id = models.CharField(max_length=100, blank=True)
     portal_id = models.CharField(max_length=100, blank=True)
     hub_id = models.CharField(max_length=100, blank=True)
     hub_domain = models.CharField(max_length=255, blank=True, null=True)
-    
-    # OAuth Credentials
     access_token = models.TextField(blank=True, null=True)
     refresh_token = models.TextField(blank=True, null=True)
     token_expires_at = models.DateTimeField(blank=True, null=True)
-    
-    # Connection Status
     status = models.CharField(
         max_length=20, 
         choices=ConnectionStatus.choices, 
         default=ConnectionStatus.DISCONNECTED
     )
     last_sync_at = models.DateTimeField(blank=True, null=True)
-    
-    # Settings
     auto_sync_contacts = models.BooleanField(default=True)
     sync_company_data = models.BooleanField(default=True)
-    
-    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
     class Meta:
         verbose_name = "HubSpot Account"
         verbose_name_plural = "HubSpot Accounts"
@@ -62,7 +51,6 @@ class HubSpotAccount(models.Model):
 
 class HubSpotContact(models.Model):
     """Mapping between email senders and HubSpot contacts"""
-    
     class SyncStatus(models.TextChoices):
         PENDING = 'pending', 'Pending'
         SYNCED = 'synced', 'Synced'
@@ -71,30 +59,20 @@ class HubSpotContact(models.Model):
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     hubspot_account = models.ForeignKey(HubSpotAccount, on_delete=models.CASCADE, related_name='contacts')
-    
-    # Contact Identification
     email_address = models.EmailField()
     hubspot_contact_id = models.CharField(max_length=100, blank=True)
-    
-    # Contact Information (extracted from emails)
     first_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100, blank=True)
     company_name = models.CharField(max_length=255, blank=True)
     phone = models.CharField(max_length=50, blank=True)
     job_title = models.CharField(max_length=255, blank=True)
     website = models.URLField(blank=True)
-    
-    # Sync Information
     sync_status = models.CharField(max_length=20, choices=SyncStatus.choices, default=SyncStatus.PENDING)
     last_synced_at = models.DateTimeField(blank=True, null=True)
     sync_error_message = models.TextField(blank=True)
-    
-    # Email Interaction Tracking
     first_email_date = models.DateTimeField(blank=True, null=True)
     last_email_date = models.DateTimeField(blank=True, null=True)
     total_emails_received = models.IntegerField(default=0)
-    
-    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

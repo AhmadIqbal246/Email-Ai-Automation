@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { loginUser, clearError } from '../../redux/authSlice'
-import InputField from '../../components/reusable/InputField'
 import ENV from '../../../config'
 
 const Login = () => {
@@ -54,27 +53,24 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-      
-      <div className="relative w-full max-w-md">
-        {/* Logo/Brand Section */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+    <div className="h-screen overflow-hidden bg-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+          {/* Header */}
+          <div className="text-center pt-10 pb-6 px-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-xl mb-6">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">{ENV.APP_NAME}</h1>
+            <p className="text-gray-500 mt-1">Sign in to your account</p>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{ENV.APP_NAME}</h1>
-          <p className="text-gray-600">Sign in to your account</p>
-        </div>
 
-        {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          <div className="px-8 py-8">
+          {/* Form */}
+          <div className="px-8 pb-8">
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="mb-5 p-3.5 bg-red-50 border border-red-200 rounded-xl">
                 <div className="flex items-center">
                   <svg className="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -83,36 +79,51 @@ const Login = () => {
                 </div>
               </div>
             )}
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-          <InputField
-                label="Email Address"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-                placeholder="Enter your email address"
-            required
-          />
-          
-          <InputField
-            label="Password"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-            required
-          />
-          
-          <button 
-            type="submit" 
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-800 flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                  </svg>
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Enter your email address"
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white text-gray-900 placeholder-gray-400"
+                />
+              </div>
+
+              {/* Password */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-800 flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Password
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter your password"
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition bg-white text-gray-900 placeholder-gray-400"
+                />
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
                 disabled={loginLoading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-4 rounded-lg font-semibold 
-                         hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
-                         transition-all duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]
-                         disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                         shadow-lg hover:shadow-xl"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-lg hover:shadow-xl transition transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loginLoading ? (
                   <div className="flex items-center justify-center">
@@ -125,50 +136,24 @@ const Login = () => {
                 ) : (
                   'Sign In'
                 )}
-          </button>
-        </form>
-        </div>
-        
-          {/* Footer Links */}
-          <div className="px-8 py-6 bg-gray-50 border-t border-gray-100">
-            <div className="text-center space-y-4">
-              <p className="text-sm text-gray-600">Don't have an account?</p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link 
-                  to="/signup/company" 
-                  className="inline-flex items-center justify-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 
-                           hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
-                           transition-all duration-200 ease-in-out"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1" />
-                  </svg>
-                  Create Company Account
-                </Link>
-                <span className="hidden sm:block text-gray-400">or</span>
-                <Link 
-                  to="#" 
-                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-blue-600 
-                           hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
-                           transition-all duration-200 ease-in-out"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  Have an invitation?
-                </Link>
-              </div>
-            </div>
+              </button>
+            </form>
           </div>
-        </div>
-        
-        {/* Trust Indicators */}
-        <div className="mt-8 text-center">
-          <p className="text-xs text-gray-500 mb-4">Trusted by teams worldwide</p>
-          <div className="flex items-center justify-center space-x-8 opacity-60">
-            <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-            <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-            <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+
+          {/* Footer CTA (no extra icons/text) */}
+          <div className="px-8 pb-8 -mt-2">
+            <div className="text-center">
+              <p className="text-gray-500 text-sm mb-3">New to our platform?</p>
+              <Link
+                to="/signup/company"
+                className="inline-flex items-center justify-center px-5 py-3 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition"
+              >
+                <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1" />
+                </svg>
+                Create Company Account
+              </Link>
+            </div>
           </div>
         </div>
       </div>

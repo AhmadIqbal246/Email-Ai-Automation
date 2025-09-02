@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { logoutUser } from '../../redux/authSlice'
 import InputField from '../reusable/InputField'
 import Navbar from '../mutual/Navbar'
@@ -9,6 +9,7 @@ import ENV from '../../../config'
 const AISettings = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const { user } = useSelector((state) => state.auth)
   const [settings, setSettings] = useState({
     is_enabled: true,
     auto_reply_enabled: false,  // Default to safer setting
@@ -212,7 +213,11 @@ Always respond in a helpful and professional manner.`,
   }
 
   const handleBackToDashboard = () => {
-    navigate('/dashboard')
+    if (user?.role === 'company_admin') {
+      navigate('/admin')
+    } else {
+      navigate('/dashboard')
+    }
   }
 
   const customActions = (
@@ -251,7 +256,7 @@ Always respond in a helpful and professional manner.`,
     <div className="min-h-screen bg-gray-50">
       <Navbar 
         title="AI Email Processing"
-        userRole="employee"
+        userRole={user?.role || 'employee'}
         onLogout={handleLogout}
         customActions={customActions}
       />
