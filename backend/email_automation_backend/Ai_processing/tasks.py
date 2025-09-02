@@ -87,6 +87,22 @@ def process_new_email_with_ai(self, email_message_id):
             processing_result['reply_task_id'] = send_result.id
             logger.info(f"Send reply task queued with ID: {send_result.id}")
         
+        # Trigger HubSpot sync for email sender if processing was successful
+        if processing_result.get('status') == 'success':
+            try:
+                # Import HubSpot sync task
+                from Accounts.hubspot_integration.tasks import sync_email_sender_to_hubspot
+                
+                # Queue HubSpot sync task (fire and forget)
+                sync_email_sender_to_hubspot.delay(
+                    str(email_message.id),
+                    str(user.id)
+                )
+                logger.info(f"✅ Queued HubSpot sync task for email sender: {email_message.sender}")
+            except Exception as hubspot_error:
+                # Don't fail the main task if HubSpot sync fails to queue
+                logger.warning(f"⚠️ Failed to queue HubSpot sync: {str(hubspot_error)}")
+        
         logger.info(f"AI processing task completed for email: {email_message.subject}")
         return processing_result
         

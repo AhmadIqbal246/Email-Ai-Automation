@@ -1,0 +1,7 @@
+from django.apps import AppConfig
+
+
+class HubspotIntegrationConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'Accounts.hubspot_integration'
+    verbose_name = 'HubSpot Integration'
