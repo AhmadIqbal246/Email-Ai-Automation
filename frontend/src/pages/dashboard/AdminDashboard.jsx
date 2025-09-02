@@ -8,7 +8,7 @@ import EmailList from '../../components/reusable/EmailList'
 import AlertMessage from '../../components/reusable/AlertMessage'
 import CurrentEmployees from '../../components/admin/CurrentEmployees'
 import InviteEmployee from '../../components/admin/InviteEmployee'
-import PendingInvitations from '../../components/admin/PendingInvitations'
+import HubSpotIntegration from '../../components/hubspot/HubSpotIntegration'
 import ENV from '../../../config'
 
 const AdminDashboard = () => {
@@ -142,6 +142,10 @@ const AdminDashboard = () => {
     setActiveSection(section)
     setError('')
     setSuccess('')
+  }
+
+  const handleNavigateToAISettings = () => {
+    navigate('/admin/ai-settings')
   }
 
   // Email connection methods
@@ -493,13 +497,13 @@ const AdminDashboard = () => {
         return <CurrentEmployees />
       case 'invite':
         return <InviteEmployee />
-      case 'invitations':
-        return <PendingInvitations />
       default:
         return (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Email Accounts */}
-            <div className="lg:col-span-1">
+            {/* Left Column - Email Accounts and HubSpot */}
+            <div className="lg:col-span-1 space-y-8">
+              {/* HubSpot Integration Section */}
+              <HubSpotIntegration />
               <div className="relative overflow-hidden animate-fade-in-up">
                 {/* Glassmorphism Container */}
                 <div className="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 hover:shadow-3xl transition-all duration-700 group overflow-hidden">

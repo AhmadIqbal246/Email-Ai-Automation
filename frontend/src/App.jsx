@@ -133,6 +133,15 @@ function App() {
             } 
           />
           
+          <Route 
+            path="/admin/ai-settings" 
+            element={
+              <ProtectedRoute requiredRole="company_admin">
+                <AISettings />
+              </ProtectedRoute>
+            } 
+          />
+          
           {/* Catch-all route for 404s */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
