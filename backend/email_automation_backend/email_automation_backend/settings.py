@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_celery_beat',  # For periodic task scheduling
     'Accounts',
-    'Accounts.hubspot_integration',  # HubSpot integration app
+    'hubspot_integration',  # HubSpot integration app (moved to root level)
     'User',
     'Ai_processing',  # AI processing app for automated email handling
 ]

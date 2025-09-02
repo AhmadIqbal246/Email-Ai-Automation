@@ -91,12 +91,11 @@ def process_new_email_with_ai(self, email_message_id):
         if processing_result.get('status') == 'success':
             try:
                 # Import HubSpot sync task
-                from Accounts.hubspot_integration.tasks import sync_email_sender_to_hubspot
+                from User.tasks import sync_email_sender_to_hubspot
                 
                 # Queue HubSpot sync task (fire and forget)
                 sync_email_sender_to_hubspot.delay(
-                    str(email_message.id),
-                    str(user.id)
+                    str(email_message.id)
                 )
                 logger.info(f"✅ Queued HubSpot sync task for email sender: {email_message.sender}")
             except Exception as hubspot_error:

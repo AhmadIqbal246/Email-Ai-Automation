@@ -5,8 +5,8 @@ import logging
 
 from .models import EmailAccount, EmailMessage, EmailFetchLog
 from .views import GmailService
-from Accounts.hubspot_integration.models import HubSpotAccount
-from Accounts.hubspot_integration.services import HubSpotContactService
+from hubspot_integration.models import HubSpotAccount
+from hubspot_integration.services import HubSpotContactService
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -247,10 +247,17 @@ def fetch_single_account_emails_task(email_account_id, fetch_type='manual'):
                     
                     # Trigger HubSpot sender sync for the new email
                     try:
+                        # Try async first
                         sync_email_sender_to_hubspot.delay(str(new_email.id))
                         logger.info(f"📧 Queued HubSpot sender sync for email from: {new_email.sender}")
-                    except Exception as hubspot_error:
-                        logger.error(f"❌ Failed to queue HubSpot sender sync: {str(hubspot_error)}")
+                    except Exception as hubspot_queue_error:
+                        # Fallback to synchronous execution if Celery is not available
+                        logger.warning(f"⚠️ Celery unavailable, running HubSpot sync synchronously: {str(hubspot_queue_error)}")
+                        try:
+                            sync_result = sync_email_sender_to_hubspot(str(new_email.id))
+                            logger.info(f"📧 Completed synchronous HubSpot sender sync: {sync_result.get('status', 'unknown')}")
+                        except Exception as sync_error:
+                            logger.error(f"❌ Failed to sync HubSpot sender synchronously: {str(sync_error)}")
                     
             except Exception as e:
                 logger.error(f"Error processing email {email_data.get('gmail_message_id', 'unknown')}: {str(e)}")

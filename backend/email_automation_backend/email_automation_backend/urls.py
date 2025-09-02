@@ -16,14 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from Accounts.hubspot_integration.views import hubspot_oauth_callback
+from hubspot_integration.views import hubspot_oauth_callback
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/accounts/', include('Accounts.urls')),  # Account management
     path('api/user/', include('User.urls')),  # User-specific features (email management, etc.)
     path('api/ai/', include('Ai_processing.urls')),  # AI processing features
-    path('api/hubspot/', include('Accounts.hubspot_integration.urls')),  # HubSpot integration
+    path('api/hubspot/', include('hubspot_integration.urls')),  # HubSpot integration
     
     # HubSpot OAuth callback at the correct path to match app configuration
     path('oauth/hubspot/callback/', hubspot_oauth_callback, name='hubspot_oauth_callback'),

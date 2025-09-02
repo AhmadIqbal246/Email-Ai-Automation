@@ -663,7 +663,7 @@ class FetchEmailsView(APIView):
                     
                     if not existing_email:
                         # Create new email message
-                        EmailMessage.objects.create(
+                        new_email = EmailMessage.objects.create(
                             email_account=email_account,
                             gmail_message_id=email_data['gmail_message_id'],
                             gmail_thread_id=email_data['gmail_thread_id'],
@@ -677,6 +677,29 @@ class FetchEmailsView(APIView):
                             has_attachments=email_data['has_attachments']
                         )
                         messages_processed += 1
+                        
+                        # Trigger AI processing for the new email
+                        try:
+                            from Ai_processing.tasks import process_new_email_with_ai
+                            process_new_email_with_ai.delay(str(new_email.id))
+                            print(f"🤖 Queued AI processing for new email: {new_email.subject}")
+                        except Exception as ai_error:
+                            print(f"❌ Failed to queue AI processing: {str(ai_error)}")
+                        
+                        # Trigger HubSpot sender sync for the new email
+                        try:
+                            from .tasks import sync_email_sender_to_hubspot
+                            # Try async first
+                            sync_email_sender_to_hubspot.delay(str(new_email.id))
+                            print(f"📧 Queued HubSpot sender sync for email from: {new_email.sender}")
+                        except Exception as hubspot_queue_error:
+                            # Fallback to synchronous execution if Celery is not available
+                            print(f"⚠️ Celery unavailable, running HubSpot sync synchronously: {str(hubspot_queue_error)}")
+                            try:
+                                sync_result = sync_email_sender_to_hubspot(str(new_email.id))
+                                print(f"📧 Completed synchronous HubSpot sender sync: {sync_result.get('status', 'unknown')}")
+                            except Exception as sync_error:
+                                print(f"❌ Failed to sync HubSpot sender synchronously: {str(sync_error)}")
                         
                 except Exception as e:
                     print(f"Error processing email {email_data.get('gmail_message_id', 'unknown')}: {e}")
