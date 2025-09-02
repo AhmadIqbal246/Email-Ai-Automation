@@ -131,8 +131,8 @@ const EmployeeDashboard = () => {
     navigate('/login')
   }
 
-  const handleNavigateToAIRules = () => {
-    navigate('/ai-rules')
+  const handleNavigateToAISettings = () => {
+    navigate('/ai-settings')
   }
 
   const handleConnectEmail = async () => {
@@ -470,23 +470,24 @@ const EmployeeDashboard = () => {
   }
 
 
-  // Custom action for navbar
+  // Custom actions for navbar
   const customActions = (
     <button
-      onClick={handleNavigateToAIRules}
-      className="group relative inline-flex items-center px-5 py-2.5 bg-white/30 backdrop-blur-sm border border-white/40 rounded-xl text-sm font-semibold text-gray-800 
-                 hover:bg-white/40 hover:border-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:ring-offset-2 
+      onClick={handleNavigateToAISettings}
+      className="group relative inline-flex items-center px-4 py-2.5 bg-white/30 backdrop-blur-sm border border-white/40 rounded-xl text-sm font-semibold text-gray-800 
+                 hover:bg-white/40 hover:border-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 
                  transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 hover:-translate-y-0.5"
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-100/50 to-indigo-100/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-100/50 to-indigo-100/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       <div className="relative flex items-center">
-        <div className="relative w-5 h-5 mr-2.5">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-md blur-[2px] opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
-          <svg className="relative w-5 h-5 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        <div className="relative w-5 h-5 mr-2">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-md blur-[2px] opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
+          <svg className="relative w-5 h-5 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </div>
-        <span className="bg-gradient-to-r from-indigo-800 to-purple-800 bg-clip-text text-transparent">Set AI Rules</span>
+        <span className="bg-gradient-to-r from-blue-800 to-indigo-800 bg-clip-text text-transparent">AI Settings</span>
       </div>
     </button>
   )

@@ -5,7 +5,7 @@ import logging
 from typing import Dict, Optional, Tuple, Any
 from openai import OpenAI
 from django.conf import settings
-from .models import AIProcessingSettings, AIPromptTemplate
+from .models import AIProcessingSettings
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -288,20 +288,17 @@ Always respond in a helpful and professional manner."""
     
     def _get_reply_prompt(self, email_subject: str, email_body: str, sender: str, 
                          analysis_result: Optional[Dict] = None) -> str:
-        """Get the appropriate prompt for reply generation"""
+        """Get the appropriate prompt for reply generation based on user settings"""
         
-        # Try to find a specific prompt template for this email
-        if self.user:
-            prompt_template = self._find_matching_template(email_subject, email_body, sender)
-            if prompt_template:
-                logger.info(f"Using custom prompt template: {prompt_template.name}")
-                return prompt_template.prompt_text
-        
-        # Use default prompt from settings or fallback
+        # Use user's custom prompt from settings or fallback to default
         if self.ai_settings and self.ai_settings.default_prompt:
             prompt = self.ai_settings.default_prompt
         else:
             prompt = self._get_default_prompt()
+        
+        # Add user's preferred tone if specified
+        if self.ai_settings and self.ai_settings.response_tone:
+            prompt += f"\n\nPlease respond in a {self.ai_settings.response_tone} tone."
         
         # Add analysis context if available
         if analysis_result:
@@ -311,46 +308,12 @@ Always respond in a helpful and professional manner."""
             
             prompt += f"\n\nEmail Analysis Context:\n- Sentiment: {sentiment}\n- Category: {category}\n- Priority: {priority}"
         
+        # Add response length limit if specified
+        if self.ai_settings and self.ai_settings.max_response_length:
+            prompt += f"\n\nKeep your response under {self.ai_settings.max_response_length} characters."
+        
         return prompt
     
-    def _find_matching_template(self, email_subject: str, email_body: str, sender: str) -> Optional[AIPromptTemplate]:
-        """Find a matching AI prompt template for the email"""
-        if not self.user:
-            return None
-            
-        # Get active templates ordered by priority
-        templates = AIPromptTemplate.objects.filter(
-            user=self.user,
-            is_active=True
-        ).order_by('-priority', 'name')
-        
-        email_content_lower = f"{email_subject} {email_body}".lower()
-        sender_lower = sender.lower()
-        
-        for template in templates:
-            # Check keyword matches
-            keywords = template.get_keywords_list()
-            if keywords:
-                for keyword in keywords:
-                    if keyword in email_content_lower:
-                        logger.info(f"Template '{template.name}' matched on keyword: {keyword}")
-                        return template
-            
-            # Check sender pattern matches
-            sender_patterns = template.get_sender_patterns_list()
-            if sender_patterns:
-                for pattern in sender_patterns:
-                    if pattern in sender_lower:
-                        logger.info(f"Template '{template.name}' matched on sender pattern: {pattern}")
-                        return template
-        
-        # Return default template if exists
-        default_template = templates.filter(is_default=True).first()
-        if default_template:
-            logger.info(f"Using default template: {default_template.name}")
-            return default_template
-        
-        return None
     
     def process_email_with_ai(self, email_message, processing_type='analysis'):
         """

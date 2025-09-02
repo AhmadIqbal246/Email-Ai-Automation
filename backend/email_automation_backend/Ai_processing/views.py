@@ -7,7 +7,7 @@ from django.utils import timezone
 import logging
 import json
 
-from .models import AIProcessingSettings, EmailProcessingLog, AIPromptTemplate
+from .models import AIProcessingSettings, EmailProcessingLog
 from User.models import EmailMessage
 from .tasks import process_new_email_with_ai, generate_ai_reply_for_email, bulk_process_emails_with_ai
 from .ai_service import AIEmailProcessor
@@ -49,27 +49,67 @@ class AISettingsView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
     
     def post(self, request):
-        """Update AI settings for the user"""
+        """Update AI settings for the user with validation"""
         try:
             ai_settings, created = AIProcessingSettings.objects.get_or_create(
-                user=request.user
+                user=request.user,
+                defaults={
+                    'is_enabled': True,
+                    'auto_reply_enabled': False,  # Default to safer setting
+                    'default_prompt': self._get_default_prompt(),
+                    'max_response_length': 500,
+                    'response_tone': 'professional'
+                }
             )
             
-            # Update fields if provided
+            # Validate and update fields if provided
             if 'is_enabled' in request.data:
+                if not isinstance(request.data['is_enabled'], bool):
+                    return Response({
+                        'message': 'is_enabled must be a boolean value'
+                    }, status=status.HTTP_400_BAD_REQUEST)
                 ai_settings.is_enabled = request.data['is_enabled']
             
             if 'auto_reply_enabled' in request.data:
+                if not isinstance(request.data['auto_reply_enabled'], bool):
+                    return Response({
+                        'message': 'auto_reply_enabled must be a boolean value'
+                    }, status=status.HTTP_400_BAD_REQUEST)
                 ai_settings.auto_reply_enabled = request.data['auto_reply_enabled']
             
             if 'default_prompt' in request.data:
-                ai_settings.default_prompt = request.data['default_prompt']
+                prompt = request.data['default_prompt'].strip()
+                if not prompt:
+                    return Response({
+                        'message': 'Default prompt cannot be empty'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                if len(prompt) > 2000:  # Reasonable limit
+                    return Response({
+                        'message': 'Default prompt cannot exceed 2000 characters'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                ai_settings.default_prompt = prompt
             
             if 'max_response_length' in request.data:
-                ai_settings.max_response_length = request.data['max_response_length']
+                try:
+                    max_length = int(request.data['max_response_length'])
+                    if max_length < 50 or max_length > 2000:
+                        return Response({
+                            'message': 'Max response length must be between 50 and 2000 characters'
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                    ai_settings.max_response_length = max_length
+                except (ValueError, TypeError):
+                    return Response({
+                        'message': 'Max response length must be a valid number'
+                    }, status=status.HTTP_400_BAD_REQUEST)
             
             if 'response_tone' in request.data:
-                ai_settings.response_tone = request.data['response_tone']
+                valid_tones = ['professional', 'friendly', 'formal', 'casual']
+                tone = request.data['response_tone']
+                if tone not in valid_tones:
+                    return Response({
+                        'message': f'Response tone must be one of: {', '.join(valid_tones)}'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                ai_settings.response_tone = tone
             
             ai_settings.save()
             
@@ -83,7 +123,8 @@ class AISettingsView(APIView):
                     'auto_reply_enabled': ai_settings.auto_reply_enabled,
                     'default_prompt': ai_settings.default_prompt,
                     'max_response_length': ai_settings.max_response_length,
-                    'response_tone': ai_settings.response_tone
+                    'response_tone': ai_settings.response_tone,
+                    'updated_at': ai_settings.updated_at.isoformat()
                 }
             })
             
@@ -92,6 +133,20 @@ class AISettingsView(APIView):
             return Response({
                 'message': f'Failed to update AI settings: {str(e)}'
             }, status=status.HTTP_400_BAD_REQUEST)
+    
+    def _get_default_prompt(self):
+        """Get the default AI prompt"""
+        return """You are a professional email assistant. Your task is to analyze the incoming email and generate an appropriate response.
+
+Please follow these guidelines:
+1. Analyze the email content, tone, and intent
+2. Determine the appropriate response tone (professional, friendly, formal)
+3. Generate a helpful, accurate, and contextually appropriate reply
+4. Keep responses concise but complete
+5. Be polite and professional in all communications
+6. If the email requires specific information you don't have, politely indicate that you'll need to gather more details
+
+Always respond in a helpful and professional manner."""
 
 
 class ProcessEmailWithAIView(APIView):
