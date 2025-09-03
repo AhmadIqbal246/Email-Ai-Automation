@@ -1,0 +1,507 @@
+# =============================================================================
+# AI-POWERED EMAIL AUTOMATION - ROOT .GITIGNORE
+# =============================================================================
+# Comprehensive .gitignore for full-stack project with React frontend and Django backend
+# Protects sensitive credentials and excludes development/build artifacts
+
+# =============================================================================
+# CRITICAL SECURITY - ENVIRONMENT & CREDENTIALS (NEVER COMMIT)
+# =============================================================================
+# Environment files (all possible variations)
+.env
+.env.*
+*.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
+.envrc
+
+# Backend environment files
+backend/**/.env*
+backend/**/local_settings.py
+backend/**/secrets.py
+backend/**/config.py
+
+# Frontend environment files
+frontend/**/.env*
+frontend/**/environment.*
+
+# API Keys and credentials (any format)
+**/api_keys.*
+**/credentials.*
+**/secrets.*
+**/config/secrets.*
+**/*secret*
+**/*credential*
+**/*token*
+
+# Google/Gmail API credentials
+**/client_secret*.json
+**/service_account*.json
+**/google_credentials.*
+**/gmail_credentials.*
+**/oauth_credentials.*
+**/token.json
+**/refresh_token.*
+
+# OAuth and authentication files
+**/oauth_state/
+**/auth_tokens/
+**/session_tokens/
+
+# SSL/TLS certificates and private keys
+**/*.key
+**/*.pem
+**/*.crt
+**/*.p12
+**/*.pfx
+**/ssl/
+**/certificates/
+
+# =============================================================================
+# PYTHON/DJANGO BACKEND
+# =============================================================================
+# Byte-compiled / optimized / DLL files
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+
+# C extensions
+**/*.so
+
+# Distribution / packaging
+backend/**/.Python
+backend/**/build/
+backend/**/develop-eggs/
+backend/**/dist/
+backend/**/downloads/
+backend/**/eggs/
+backend/**/.eggs/
+backend/**/lib/
+backend/**/lib64/
+backend/**/parts/
+backend/**/sdist/
+backend/**/var/
+backend/**/wheels/
+backend/**/share/python-wheels/
+backend/**/*.egg-info/
+backend/**/.installed.cfg
+backend/**/*.egg
+backend/**/MANIFEST
+
+# PyInstaller
+backend/**/*.manifest
+backend/**/*.spec
+
+# Installer logs
+backend/**/pip-log.txt
+backend/**/pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+backend/**/htmlcov/
+backend/**/.tox/
+backend/**/.nox/
+backend/**/.coverage
+backend/**/.coverage.*
+backend/**/.cache
+backend/**/nosetests.xml
+backend/**/coverage.xml
+backend/**/*.cover
+backend/**/*.py,cover
+backend/**/.hypothesis/
+backend/**/.pytest_cache/
+backend/**/cover/
+
+# Translations
+backend/**/*.mo
+backend/**/*.pot
+
+# Django specific
+backend/**/*.sqlite3
+backend/**/*.sqlite3-journal
+backend/**/db.sqlite3*
+backend/**/local_settings.py
+backend/**/media/
+backend/**/staticfiles/
+backend/**/.cache/
+backend/**/django_session/
+
+# Django logs
+backend/**/*.log
+backend/**/logs/
+backend/**/log/
+
+# Celery
+backend/**/celerybeat-schedule
+backend/**/celerybeat.pid
+backend/**/celery.log
+backend/**/worker.log
+
+# Virtual environments
+backend/**/venv/
+backend/**/env/
+backend/**/.venv/
+backend/**/ENV/
+backend/**/env.bak/
+backend/**/venv.bak/
+
+# =============================================================================
+# NODE.JS/REACT FRONTEND
+# =============================================================================
+# Dependencies
+frontend/**/node_modules/
+frontend/**/.pnp
+frontend/**/.pnp.js
+frontend/**/.yarn/install-state.gz
+
+# Production builds
+frontend/**/build/
+frontend/**/dist/
+frontend/**/.next/
+frontend/**/out/
+
+# Runtime data
+frontend/**/*.pid
+frontend/**/*.seed
+frontend/**/*.pid.lock
+
+# Coverage directory used by tools like istanbul
+frontend/**/coverage/
+frontend/**/.nyc_output
+
+# Grunt intermediate storage
+frontend/**/.grunt
+
+# Bower dependency directory
+frontend/**/bower_components
+
+# node-waf configuration
+frontend/**/.lock-wscript
+
+# Compiled binary addons
+frontend/**/build/Release
+
+# TypeScript cache
+frontend/**/*.tsbuildinfo
+
+# Optional npm cache directory
+frontend/**/.npm
+
+# Optional eslint cache
+frontend/**/.eslintcache
+
+# Optional stylelint cache
+frontend/**/.stylelintcache
+
+# Microbundle cache
+frontend/**/.rpt2_cache/
+frontend/**/.rts2_cache_cjs/
+frontend/**/.rts2_cache_es/
+frontend/**/.rts2_cache_umd/
+
+# Optional REPL history
+frontend/**/.node_repl_history
+
+# Output of 'npm pack'
+frontend/**/*.tgz
+
+# Yarn Integrity file
+frontend/**/.yarn-integrity
+
+# parcel-bundler cache
+frontend/**/.cache
+frontend/**/.parcel-cache
+
+# Next.js build output
+frontend/**/.next
+
+# Nuxt.js build / generate output
+frontend/**/.nuxt
+frontend/**/dist
+
+# Storybook build outputs
+frontend/**/.out
+frontend/**/.storybook-out
+frontend/**/storybook-static
+
+# Temporary folders
+frontend/**/tmp/
+frontend/**/temp/
+
+# Editor directories and files
+frontend/**/.vscode/
+frontend/**/.idea/
+frontend/**/*.suo
+frontend/**/*.ntvs*
+frontend/**/*.njsproj
+frontend/**/*.sln
+frontend/**/*.sw?
+
+# =============================================================================
+# AI & MACHINE LEARNING
+# =============================================================================
+# Model files
+**/*.pkl
+**/*.joblib
+**/*.h5
+**/*.hdf5
+**/*.pb
+**/*.onnx
+**/models/
+**/checkpoints/
+**/saved_models/
+
+# AI cache and embeddings
+**/ai_cache/
+**/embeddings_cache/
+**/vector_store/
+**/faiss_index/
+
+# OpenAI/GPT cache
+**/gpt_cache/
+**/openai_cache/
+**/llm_cache/
+
+# Training data and datasets
+**/training_data/
+**/datasets/
+**/*.csv
+**/*.parquet
+**/*.h5
+**/*.hdf5
+
+# =============================================================================
+# EMAIL & INTEGRATION SERVICES
+# =============================================================================
+# Email attachments and temporary files
+**/email_attachments/
+**/temp_emails/
+**/email_cache/
+**/processed_emails/
+
+# Gmail API specific
+**/gmail_tokens/
+**/gmail_credentials/
+
+# HubSpot integration
+**/hubspot_tokens/
+**/hubspot_cache/
+**/hs_cache/
+
+# Email processing results
+**/email_processing/
+**/automation_results/
+
+# =============================================================================
+# DATABASE & STORAGE
+# =============================================================================
+# Database files
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+**/*.database
+
+# Database backups
+**/backup/
+**/backups/
+**/*.backup
+**/*.dump
+**/*.sql.gz
+
+# Redis
+**/dump.rdb
+
+# =============================================================================
+# SYSTEM & IDE FILES
+# =============================================================================
+# macOS
+**/.DS_Store
+**/.AppleDouble
+**/.LSOverride
+**/._*
+**/.AppleDB
+**/.AppleDesktop
+**/Network Trash Folder
+**/Temporary Items
+**/.apdisk
+
+# Windows
+**/Thumbs.db
+**/Thumbs.db:encryptable
+**/ehthumbs.db
+**/ehthumbs_vista.db
+**/*.stackdump
+**/*.lnk
+**/desktop.ini
+
+# Linux
+**/*~
+
+# IDE and Editor files
+**/.vscode/
+**/.idea/
+**/*.swp
+**/*.swo
+**/*.sublime-project
+**/*.sublime-workspace
+**/*.code-workspace
+
+# JetBrains IDEs
+**/.idea/
+**/*.iml
+**/*.iws
+**/*.ipr
+
+# Visual Studio
+**/*.suo
+**/*.user
+**/*.userosscache
+**/*.sln.docstates
+**/[Dd]ebug/
+**/[Dd]ebugPublic/
+**/[Rr]elease/
+**/[Rr]eleases/
+
+# =============================================================================
+# LOGGING & MONITORING
+# =============================================================================
+# Log files
+**/*.log
+**/logs/
+**/log/
+**/*.log.*
+
+# Application specific logs
+**/django.log
+**/celery.log
+**/gunicorn.log
+**/nginx.log
+**/error.log
+**/access.log
+
+# Monitoring and metrics
+**/metrics/
+**/monitoring/
+**/prometheus/
+
+# =============================================================================
+# BACKUP & TEMPORARY FILES
+# =============================================================================
+# Backup files
+**/*.bak
+**/*.backup
+**/*.old
+**/*.orig
+**/*.tmp
+**/*.temp
+
+# Temporary directories
+**/tmp/
+**/temp/
+**/temporary/
+
+# Archive files
+**/*.zip
+**/*.tar.gz
+**/*.tar.bz2
+**/*.rar
+**/*.7z
+
+# =============================================================================
+# DEPLOYMENT & DEVOPS
+# =============================================================================
+# Docker
+**/Dockerfile.local
+**/docker-compose.override.yml
+**/.dockerignore.local
+
+# Kubernetes
+**/*.yaml.bak
+**/k8s-secrets/
+
+# Terraform
+**/*.tfstate
+**/*.tfstate.*
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfvars
+**/terraform.tfvars.json
+
+# Ansible
+**/host_vars/
+**/group_vars/
+**/vault_password_file
+
+# CI/CD
+**/.github/workflows/*.local.yml
+
+# =============================================================================
+# CUSTOM PROJECT SPECIFIC
+# =============================================================================
+# Email automation specific
+**/email_templates_backup/
+**/processed_attachments/
+**/ai_responses_cache/
+
+# Development scripts output
+**/script_output/
+**/dev_scripts/output/
+
+# Testing artifacts
+**/test_results/
+**/test_reports/
+**/test_databases/
+
+# Local development
+**/local/
+**/development/
+**/dev/
+
+# Personal notes (uncomment if you don't want to commit)
+# **/notes/
+# **/TODO.md
+# **/NOTES.txt
+# **/personal_notes/
+
+# Generated documentation
+**/docs/build/
+**/docs/_build/
+
+# Custom cache directories
+**/cache/
+**/custom_cache/
+**/app_cache/
+
+# Profiling results
+**/*.prof
+**/*.profile
+
+# Coverage reports
+**/htmlcov/
+**/.coverage*
+
+# =============================================================================
+# PACKAGE MANAGERS & DEPENDENCIES
+# =============================================================================
+# Python package managers
+**/Pipfile.lock
+**/poetry.lock
+**/pdm.lock
+
+# Node.js package managers
+**/package-lock.json.bak
+**/yarn.lock.bak
+**/pnpm-lock.yaml.bak
+
+# Composer (PHP - if used for any utilities)
+**/composer.lock
+
+# =============================================================================
+# END OF GITIGNORE
+# =============================================================================
+
+# Note: This .gitignore is designed to be comprehensive and protect against
+# accidental commits of sensitive data. Review and adjust based on your
+# specific project needs.
