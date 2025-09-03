@@ -83,6 +83,7 @@ class EmailMessage(models.Model):
     is_read = models.BooleanField(default=False)
     is_starred = models.BooleanField(default=False)
     has_attachments = models.BooleanField(default=False)
+    has_ai_reply = models.BooleanField(default=False)  # Whether this email has been replied to by AI
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)

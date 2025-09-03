@@ -144,41 +144,6 @@ const AISettings = () => {
     }
   }
 
-  const handleBulkProcess = async () => {
-    setLoading(true)
-    setError('')
-    setSuccess('')
-
-    try {
-      const response = await fetch(`${ENV.API_BASE_URL}/api/ai/bulk-process/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Token ${localStorage.getItem('authToken')}`
-        },
-        body: JSON.stringify({
-          processing_type: settings.auto_reply_enabled ? 'auto_reply' : 'analysis'
-        })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setSuccess(`Bulk processing started with task ID: ${data.task_id}`)
-        // Refresh logs after a delay
-        setTimeout(() => {
-          fetchProcessingLogs()
-          fetchStats()
-        }, 5000)
-      } else {
-        const errorData = await response.json()
-        setError(errorData.message || 'Failed to start bulk processing')
-      }
-    } catch (error) {
-      setError('Network error. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSettingChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -339,26 +304,14 @@ Always respond in a helpful and professional manner.`,
           {/* AI Settings */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
             <div className="p-6 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">AI Processing Settings</h3>
-                </div>
-                <button
-                  onClick={handleBulkProcess}
-                  disabled={loading || !settings.is_enabled}
-                  className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  {loading ? 'Processing...' : 'Bulk Process Emails'}
-                </button>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">AI Processing Settings</h3>
               </div>
             </div>
             
