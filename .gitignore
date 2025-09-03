@@ -18,13 +18,18 @@
 .env.test
 .envrc
 
+# Specific frontend .env files
+frontend/.env
+frontend/.env.*
+frontend/*.env
+
 # Backend environment files
 backend/**/.env*
 backend/**/local_settings.py
 backend/**/secrets.py
 backend/**/config.py
 
-# Frontend environment files
+# Frontend environment files (all variations)
 frontend/**/.env*
 frontend/**/environment.*
 
@@ -309,6 +314,9 @@ frontend/**/*.sw?
 **/*.backup
 **/*.dump
 **/*.sql.gz
+**/*.sql
+backend/*.sql
+backend/**/*.sql
 
 # Redis
 **/dump.rdb
@@ -497,6 +505,20 @@ frontend/**/*.sw?
 
 # Composer (PHP - if used for any utilities)
 **/composer.lock
+
+# =============================================================================
+# EXCEPTIONS - Files that SHOULD be committed
+# =============================================================================
+# Allow example/template files (these are safe to commit)
+!**/*.example
+!**/.env.example
+!**/example.*
+!**/template.*
+!**/sample.*
+!**/*-example.*
+!**/*_example.*
+!**/*.template
+!**/*.sample
 
 # =============================================================================
 # END OF GITIGNORE
