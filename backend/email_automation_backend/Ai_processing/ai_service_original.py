@@ -357,7 +357,11 @@ Always respond in a helpful and professional manner."""
         logger.info(f"Processing type: {processing_type}")
         
         # Create processing log
-        log_entry = EmailProcessingLog.log_processing_start(email_message, processing_type)
+        log_entry = EmailProcessingLog.objects.create(
+            email_message=email_message,
+            processing_type=processing_type,
+            status='processing'
+        )
         
         try:
             result = {
@@ -403,7 +407,7 @@ Always respond in a helpful and professional manner."""
                 log_entry.generated_reply_body = reply_body
             
             # Update processing log as completed
-            log_entry.status = EmailProcessingLog.ProcessingStatus.COMPLETED
+            log_entry.status = 'completed'
             log_entry.processing_duration = analysis_result.get('processing_duration', 0)
             log_entry.tokens_used = analysis_result.get('tokens_used', 0)
             log_entry.save()
@@ -415,7 +419,7 @@ Always respond in a helpful and professional manner."""
             logger.error(f"Error in AI processing: {str(e)}")
             
             # Update processing log as failed
-            log_entry.status = EmailProcessingLog.ProcessingStatus.FAILED
+            log_entry.status = 'failed'
             log_entry.error_message = str(e)
             log_entry.save()
             

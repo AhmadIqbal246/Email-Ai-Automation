@@ -16,6 +16,7 @@ from .serializers import (
     HubSpotOAuthInitSerializer, HubSpotOAuthCallbackSerializer
 )
 from .services import HubSpotOAuthService, HubSpotContactService
+from .utils import is_connected, is_token_expired
 
 logger = logging.getLogger(__name__)
 
@@ -187,19 +188,19 @@ def test_hubspot_connection(request):
         
         # Test basic connection status
         connection_info = {
-            'connected': hubspot_account.is_connected(),
+            'connected': is_connected(hubspot_account),
             'status': hubspot_account.status,
             'hub_id': hubspot_account.hub_id,
             'portal_id': hubspot_account.portal_id,
             'hub_domain': hubspot_account.hub_domain,
             'token_expires_at': hubspot_account.token_expires_at,
-            'is_token_expired': hubspot_account.is_token_expired(),
+            'is_token_expired': is_token_expired(hubspot_account),
             'last_sync_at': hubspot_account.last_sync_at,
             'auto_sync_contacts': hubspot_account.auto_sync_contacts
         }
         
         # If not connected, return status without testing API
-        if not hubspot_account.is_connected():
+        if not is_connected(hubspot_account):
             connection_info.update({
                 'error': 'Account not connected or token expired',
                 'error_type': 'disconnected',
@@ -353,7 +354,7 @@ def hubspot_oauth_callback(request):
                 'access_token': token_data['access_token'],
                 'refresh_token': token_data['refresh_token'],
                 'token_expires_at': timezone.now() + timedelta(seconds=token_data.get('expires_in', 3600)),
-                'status': HubSpotAccount.ConnectionStatus.CONNECTED
+                'status': 'connected'
             }
         )
         
@@ -366,7 +367,7 @@ def hubspot_oauth_callback(request):
             hubspot_account.access_token = token_data['access_token']
             hubspot_account.refresh_token = token_data['refresh_token']
             hubspot_account.token_expires_at = timezone.now() + timedelta(seconds=token_data.get('expires_in', 3600))
-            hubspot_account.status = HubSpotAccount.ConnectionStatus.CONNECTED
+            hubspot_account.status = 'connected'
             hubspot_account.save()
         
         # Clean up session
@@ -389,7 +390,7 @@ def disconnect_hubspot(request):
     """Disconnect user's HubSpot account"""
     try:
         hubspot_account = request.user.hubspot_account
-        hubspot_account.status = HubSpotAccount.ConnectionStatus.DISCONNECTED
+        hubspot_account.status = 'disconnected'
         hubspot_account.access_token = ''
         hubspot_account.refresh_token = ''
         hubspot_account.token_expires_at = None
@@ -466,12 +467,12 @@ def get_sync_statistics(request):
             }, status=status.HTTP_404_NOT_FOUND)
         
         # Check if account is properly connected
-        if not hubspot_account.is_connected():
+        if not is_connected(hubspot_account):
             return Response({
                 'error': 'HubSpot account not connected or token expired',
                 'error_type': 'disconnected',
                 'status': hubspot_account.status,
-                'is_token_expired': hubspot_account.is_token_expired(),
+                'is_token_expired': is_token_expired(hubspot_account),
                 'message': 'Your HubSpot connection has expired. Please reconnect your account.'
             }, status=status.HTTP_401_UNAUTHORIZED)
         

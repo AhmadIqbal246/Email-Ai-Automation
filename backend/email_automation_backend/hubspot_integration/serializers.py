@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import HubSpotAccount, HubSpotContact, HubSpotSyncLog
+from .utils import is_connected, is_token_expired
 
 
 class HubSpotAccountSerializer(serializers.ModelSerializer):
@@ -22,10 +23,10 @@ class HubSpotAccountSerializer(serializers.ModelSerializer):
         ]
     
     def get_is_connected(self, obj):
-        return obj.is_connected()
+        return is_connected(obj)
     
     def get_is_token_expired(self, obj):
-        return obj.is_token_expired()
+        return is_token_expired(obj)
 
 
 class HubSpotContactSerializer(serializers.ModelSerializer):

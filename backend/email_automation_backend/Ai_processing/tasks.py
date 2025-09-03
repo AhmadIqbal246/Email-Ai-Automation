@@ -51,7 +51,7 @@ def process_new_email_with_ai(self, email_message_id):
         # Check if this email has already been processed
         existing_log = EmailProcessingLog.objects.filter(
             email_message=email_message,
-            status=EmailProcessingLog.ProcessingStatus.COMPLETED
+            status='completed'
         ).first()
         
         if existing_log:
@@ -155,8 +155,8 @@ def send_automated_reply(self, original_email_id, reply_subject, reply_body):
         original_email_data = {
             'subject': original_email.subject,
             'sender': original_email.sender,
-            'recipients': original_email.get_recipients_list(),
-            'cc': original_email.get_cc_list(),
+            'recipients': json.loads(original_email.recipients) if original_email.recipients else [],
+            'cc': json.loads(original_email.cc) if original_email.cc else [],
             'body_html': original_email.body_html,
             'body_plain': original_email.body_plain,
             'gmail_message_id': original_email.gmail_message_id,
@@ -200,7 +200,7 @@ def send_automated_reply(self, original_email_id, reply_subject, reply_body):
             # Update processing log
             processing_log = EmailProcessingLog.objects.filter(
                 email_message=original_email,
-                processing_type=EmailProcessingLog.ProcessingType.AUTO_REPLY
+                processing_type='auto_reply'
             ).first()
             
             if processing_log:
@@ -239,7 +239,7 @@ def send_automated_reply(self, original_email_id, reply_subject, reply_body):
         # Update the processing log to mark reply as sent
         processing_log = EmailProcessingLog.objects.filter(
             email_message=original_email,
-            processing_type=EmailProcessingLog.ProcessingType.AUTO_REPLY
+            processing_type='auto_reply'
         ).first()
         
         if processing_log:
@@ -270,7 +270,7 @@ def send_automated_reply(self, original_email_id, reply_subject, reply_body):
         try:
             processing_log = EmailProcessingLog.objects.filter(
                 email_message_id=original_email_id,
-                processing_type=EmailProcessingLog.ProcessingType.AUTO_REPLY
+                processing_type='auto_reply'
             ).first()
             
             if processing_log:
@@ -340,7 +340,7 @@ def bulk_process_emails_with_ai(self, user_id, email_account_ids=None, processin
             message_type='received'  # Only process received emails
         ).exclude(
             # Exclude already processed emails
-            processing_logs__status=EmailProcessingLog.ProcessingStatus.COMPLETED
+            processing_logs__status='completed'
         ).order_by('-received_at')[:50]  # Limit to 50 emails per batch
         
         if not unprocessed_emails:

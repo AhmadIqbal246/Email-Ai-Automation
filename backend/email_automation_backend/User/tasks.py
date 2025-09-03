@@ -114,9 +114,10 @@ def fetch_all_emails_task(self):
                 fetch_duration = (datetime.now() - start_time).total_seconds()
                 
                 # Log the successful fetch operation
-                EmailFetchLog.log_success(
+                EmailFetchLog.objects.create(
                     email_account=account,
                     fetch_type='scheduled',
+                    status='success',
                     messages_fetched=len(emails_data),
                     messages_processed=messages_processed_for_account,
                     fetch_duration=fetch_duration,
@@ -132,9 +133,10 @@ def fetch_all_emails_task(self):
                 
                 # Log the failure
                 try:
-                    EmailFetchLog.log_failure(
+                    EmailFetchLog.objects.create(
                         email_account=account,
                         fetch_type='scheduled',
+                        status='failed',
                         error_message=str(e)
                     )
                 except Exception as log_error:
@@ -267,9 +269,10 @@ def fetch_single_account_emails_task(email_account_id, fetch_type='manual'):
         fetch_duration = (datetime.now() - start_time).total_seconds()
         
         # Log the fetch operation
-        EmailFetchLog.log_success(
+        EmailFetchLog.objects.create(
             email_account=account,
             fetch_type=fetch_type,
+            status='success',
             messages_fetched=len(emails_data),
             messages_processed=messages_processed,
             fetch_duration=fetch_duration,
@@ -294,9 +297,10 @@ def fetch_single_account_emails_task(email_account_id, fetch_type='manual'):
         # Log the failure if we have the account
         if 'account' in locals():
             try:
-                EmailFetchLog.log_failure(
+                EmailFetchLog.objects.create(
                     email_account=account,
                     fetch_type=fetch_type,
+                    status='failed',
                     error_message=str(e)
                 )
             except Exception as log_error:

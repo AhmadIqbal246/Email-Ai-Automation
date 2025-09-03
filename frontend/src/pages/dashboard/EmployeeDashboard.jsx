@@ -509,9 +509,6 @@ const EmployeeDashboard = () => {
           
           {/* Left Column - Email Accounts and HubSpot */}
           <div className="lg:col-span-1 space-y-8">
-            {/* HubSpot Integration Section */}
-            <HubSpotIntegration />
-            
             {/* Email Accounts Section */}
             <div className="relative overflow-hidden animate-fade-in-up">
               {/* Glassmorphism Container */}
@@ -682,6 +679,9 @@ const EmployeeDashboard = () => {
                 </div>
               </div>
             </div>
+            
+            {/* HubSpot Integration Section */}
+            <HubSpotIntegration />
           </div>
           
           {/* Right Column - Emails */}

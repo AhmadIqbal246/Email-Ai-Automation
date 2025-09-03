@@ -6,6 +6,7 @@ from django.utils import timezone
 from urllib.parse import urlencode
 import time
 from .models import HubSpotAccount, HubSpotContact, HubSpotSyncLog
+from .utils import log_success, log_failure, is_token_expired, is_connected
 
 logger = logging.getLogger(__name__)
 
@@ -114,7 +115,7 @@ class HubSpotAPIService:
     
     def _get_headers(self):
         """Get authorization headers with valid token"""
-        if self.hubspot_account.is_token_expired():
+        if is_token_expired(self.hubspot_account):
             self._refresh_token()
         
         return {
@@ -135,29 +136,31 @@ class HubSpotAPIService:
             
             expires_in = token_data.get('expires_in', 3600)
             self.hubspot_account.token_expires_at = timezone.now() + timedelta(seconds=expires_in)
-            self.hubspot_account.status = HubSpotAccount.ConnectionStatus.CONNECTED
+            self.hubspot_account.status = 'connected'
             self.hubspot_account.save()
             
             # Log successful token refresh
             duration = time.time() - start_time
-            HubSpotSyncLog.log_success(
-                self.hubspot_account,
-                HubSpotSyncLog.OperationType.TOKEN_REFRESH,
-                duration=duration
+            HubSpotSyncLog.objects.create(
+                hubspot_account=self.hubspot_account,
+                operation_type='token_refresh',
+                status='success',
+                processing_duration=duration
             )
             
             logger.info(f"Successfully refreshed HubSpot token for {self.hubspot_account.user.email}")
             
         except Exception as e:
             # Mark account as having error
-            self.hubspot_account.status = HubSpotAccount.ConnectionStatus.ERROR
+            self.hubspot_account.status = 'error'
             self.hubspot_account.save()
             
             # Log the failure
-            HubSpotSyncLog.log_failure(
-                self.hubspot_account,
-                HubSpotSyncLog.OperationType.TOKEN_REFRESH,
-                str(e)
+            HubSpotSyncLog.objects.create(
+                hubspot_account=self.hubspot_account,
+                operation_type='token_refresh',
+                status='failed',
+                error_message=str(e)
             )
             
             logger.error(f"Failed to refresh HubSpot token for {self.hubspot_account.user.email}: {str(e)}")
@@ -231,14 +234,15 @@ class HubSpotAPIService:
             duration = time.time() - start_time
             
             # Log successful operation
-            HubSpotSyncLog.log_success(
-                self.hubspot_account,
-                HubSpotSyncLog.OperationType.CREATE_CONTACT,
+            HubSpotSyncLog.objects.create(
+                hubspot_account=self.hubspot_account,
+                operation_type='create_contact',
+                status='success',
                 contact_email=email,
                 hubspot_contact_id=contact_data.get('id'),
                 request_data=payload,
                 response_data=contact_data,
-                duration=duration
+                processing_duration=duration
             )
             
             logger.info(f"Successfully created HubSpot contact for {email}")
@@ -249,10 +253,11 @@ class HubSpotAPIService:
             logger.error(error_msg)
             
             # Log the failure
-            HubSpotSyncLog.log_failure(
-                self.hubspot_account,
-                HubSpotSyncLog.OperationType.CREATE_CONTACT,
-                error_msg,
+            HubSpotSyncLog.objects.create(
+                hubspot_account=self.hubspot_account,
+                operation_type='create_contact',
+                status='failed',
+                error_message=error_msg,
                 contact_email=email,
                 request_data=payload if 'payload' in locals() else None
             )
@@ -276,13 +281,14 @@ class HubSpotAPIService:
             duration = time.time() - start_time
             
             # Log successful operation
-            HubSpotSyncLog.log_success(
-                self.hubspot_account,
-                HubSpotSyncLog.OperationType.UPDATE_CONTACT,
+            HubSpotSyncLog.objects.create(
+                hubspot_account=self.hubspot_account,
+                operation_type='update_contact',
+                status='success',
                 hubspot_contact_id=contact_id,
                 request_data=payload,
                 response_data=contact_data,
-                duration=duration
+                processing_duration=duration
             )
             
             logger.info(f"Successfully updated HubSpot contact {contact_id}")
@@ -293,10 +299,11 @@ class HubSpotAPIService:
             logger.error(error_msg)
             
             # Log the failure
-            HubSpotSyncLog.log_failure(
-                self.hubspot_account,
-                HubSpotSyncLog.OperationType.UPDATE_CONTACT,
-                error_msg,
+            HubSpotSyncLog.objects.create(
+                hubspot_account=self.hubspot_account,
+                operation_type='update_contact',
+                status='failed',
+                error_message=error_msg,
                 hubspot_contact_id=contact_id,
                 request_data=payload if 'payload' in locals() else None
             )
@@ -345,7 +352,7 @@ class HubSpotContactService:
         
         try:
             self.hubspot_account = user.hubspot_account
-            if not self.hubspot_account.is_connected():
+            if not is_connected(self.hubspot_account):
                 raise Exception("HubSpot account not connected or token expired")
         except HubSpotAccount.DoesNotExist:
             raise Exception("User has no HubSpot account connected")
@@ -380,7 +387,7 @@ class HubSpotContactService:
                 hubspot_contact.save()
             
             # Sync to HubSpot if not already synced or needs update
-            if hubspot_contact.sync_status in [HubSpotContact.SyncStatus.PENDING, HubSpotContact.SyncStatus.FAILED]:
+            if hubspot_contact.sync_status in ['pending', 'failed']:
                 self._sync_contact_to_hubspot(hubspot_contact)
             
             return hubspot_contact
@@ -405,7 +412,7 @@ class HubSpotContactService:
             
             # Update local contact record
             hubspot_contact.hubspot_contact_id = hubspot_data.get('id')
-            hubspot_contact.sync_status = HubSpotContact.SyncStatus.SYNCED
+            hubspot_contact.sync_status = 'synced'
             hubspot_contact.last_synced_at = timezone.now()
             hubspot_contact.sync_error_message = ''
             hubspot_contact.save()
@@ -414,7 +421,7 @@ class HubSpotContactService:
             
         except Exception as e:
             # Update contact with error status
-            hubspot_contact.sync_status = HubSpotContact.SyncStatus.FAILED
+            hubspot_contact.sync_status = 'failed'
             hubspot_contact.sync_error_message = str(e)
             hubspot_contact.save()
             
@@ -469,13 +476,13 @@ class HubSpotContactService:
         """Get synchronization statistics for this user"""
         total_contacts = self.hubspot_account.contacts.count()
         synced_contacts = self.hubspot_account.contacts.filter(
-            sync_status=HubSpotContact.SyncStatus.SYNCED
+            sync_status='synced'
         ).count()
         failed_contacts = self.hubspot_account.contacts.filter(
-            sync_status=HubSpotContact.SyncStatus.FAILED
+            sync_status='failed'
         ).count()
         pending_contacts = self.hubspot_account.contacts.filter(
-            sync_status=HubSpotContact.SyncStatus.PENDING
+            sync_status='pending'
         ).count()
         
         return {
@@ -547,7 +554,7 @@ class HubSpotContactService:
                     hubspot_contact.save()
             
             # Sync to HubSpot if not already synced or needs update
-            if (hubspot_contact.sync_status in [HubSpotContact.SyncStatus.PENDING, HubSpotContact.SyncStatus.FAILED] or
+            if (hubspot_contact.sync_status in ['pending', 'failed'] or
                 not hubspot_contact.hubspot_contact_id):
                 self._sync_contact_to_hubspot_with_details(hubspot_contact, sender_details)
             
@@ -621,7 +628,7 @@ class HubSpotContactService:
             
             # Update local contact record
             hubspot_contact.hubspot_contact_id = hubspot_data.get('id')
-            hubspot_contact.sync_status = HubSpotContact.SyncStatus.SYNCED
+            hubspot_contact.sync_status = 'synced'
             hubspot_contact.last_synced_at = timezone.now()
             hubspot_contact.sync_error_message = ''
             hubspot_contact.save()
@@ -630,7 +637,7 @@ class HubSpotContactService:
             
         except Exception as e:
             # Update contact with error status
-            hubspot_contact.sync_status = HubSpotContact.SyncStatus.FAILED
+            hubspot_contact.sync_status = 'failed'
             hubspot_contact.sync_error_message = str(e)
             hubspot_contact.save()
             

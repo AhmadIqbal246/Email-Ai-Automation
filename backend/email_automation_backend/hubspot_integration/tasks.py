@@ -3,6 +3,7 @@ from celery import shared_task
 from django.utils import timezone
 from .models import HubSpotAccount
 from .services import HubSpotContactService
+from .utils import is_connected
 from User.models import EmailMessage
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ def sync_email_sender_to_hubspot(self, email_message_id, user_id):
         # Check if user has HubSpot account connected
         try:
             hubspot_account = user.hubspot_account
-            if not hubspot_account.is_connected():
+            if not is_connected(hubspot_account):
                 logger.info(f"User {user.email} does not have HubSpot connected or token expired")
                 return {"status": "skipped", "message": "HubSpot not connected"}
         except HubSpotAccount.DoesNotExist:
@@ -86,7 +87,7 @@ def bulk_sync_contacts_to_hubspot(user_id, email_addresses=None):
         # Check if user has HubSpot account
         try:
             hubspot_account = user.hubspot_account
-            if not hubspot_account.is_connected():
+            if not is_connected(hubspot_account):
                 return {"status": "error", "message": "HubSpot not connected"}
         except HubSpotAccount.DoesNotExist:
             return {"status": "error", "message": "No HubSpot account"}
@@ -188,7 +189,7 @@ def refresh_hubspot_tokens():
         expiry_threshold = timezone.now() + timedelta(hours=1)
         
         accounts_to_refresh = HubSpotAccount.objects.filter(
-            status=HubSpotAccount.ConnectionStatus.CONNECTED,
+            status='connected',
             token_expires_at__lte=expiry_threshold,
             refresh_token__isnull=False
         ).exclude(refresh_token='')

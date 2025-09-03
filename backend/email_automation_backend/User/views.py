@@ -709,9 +709,10 @@ class FetchEmailsView(APIView):
             fetch_duration = (datetime.now() - start_time).total_seconds()
             
             # Log the fetch operation
-            EmailFetchLog.log_success(
+            EmailFetchLog.objects.create(
                 email_account=email_account,
                 fetch_type='manual',
+                status='success',
                 messages_fetched=len(emails_data),
                 messages_processed=messages_processed,
                 fetch_duration=fetch_duration,
@@ -728,9 +729,10 @@ class FetchEmailsView(APIView):
         except Exception as e:
             # Log the failure
             if 'email_account' in locals():
-                EmailFetchLog.log_failure(
+                EmailFetchLog.objects.create(
                     email_account=email_account,
                     fetch_type='manual',
+                    status='failed',
                     error_message=str(e)
                 )
             
@@ -772,8 +774,8 @@ class GetEmailsView(APIView):
                     'id': email.id,
                     'subject': email.subject,
                     'sender': email.sender,
-                    'recipients': email.get_recipients_list(),
-                    'cc': email.get_cc_list(),
+                    'recipients': json.loads(email.recipients) if email.recipients else [],
+                    'cc': json.loads(email.cc) if email.cc else [],
                     'received_at': email.received_at.isoformat(),
                     'is_read': email.is_read,
                     'is_starred': email.is_starred,
@@ -820,8 +822,8 @@ class GetEmailContentView(APIView):
                 'id': email.id,
                 'subject': email.subject,
                 'sender': email.sender,
-                'recipients': email.get_recipients_list(),
-                'cc': email.get_cc_list(),
+                'recipients': json.loads(email.recipients) if email.recipients else [],
+                'cc': json.loads(email.cc) if email.cc else [],
                 'received_at': email.received_at.isoformat(),
                 'is_read': email.is_read,
                 'is_starred': email.is_starred,
@@ -1207,8 +1209,8 @@ class ReplyToEmailView(APIView):
             original_email_data = {
                 'subject': original_email.subject,
                 'sender': original_email.sender,
-                'recipients': original_email.get_recipients_list(),
-                'cc': original_email.get_cc_list(),
+                'recipients': json.loads(original_email.recipients) if original_email.recipients else [],
+                'cc': json.loads(original_email.cc) if original_email.cc else [],
                 'body_html': original_email.body_html,
                 'body_plain': original_email.body_plain,
                 'gmail_message_id': original_email.gmail_message_id,
@@ -1319,8 +1321,8 @@ class GetEmailRepliesView(APIView):
                     'id': email.id,
                     'subject': email.subject,
                     'sender': email.sender,
-                    'recipients': email.get_recipients_list(),
-                    'cc': email.get_cc_list(),
+                    'recipients': json.loads(email.recipients) if email.recipients else [],
+                    'cc': json.loads(email.cc) if email.cc else [],
                     'received_at': email.received_at.isoformat(),
                     'message_type': email.message_type,
                     'is_read': email.is_read,

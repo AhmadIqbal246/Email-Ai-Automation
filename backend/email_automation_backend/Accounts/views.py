@@ -56,8 +56,8 @@ class CompanySignupView(APIView):
                 last_name=data['lastName'],
                 phone_number=data.get('phoneNumber', ''),
                 company=company,
-                role=User.Role.COMPANY_ADMIN,
-                status=User.Status.ACTIVE
+                role='company_admin',
+                status='active'
             )
             
             # Generate auth token
@@ -88,10 +88,10 @@ class EmployeeSignupView(APIView):
             try:
                 invitation = Invitation.objects.get(
                     token=token,
-                    status=Invitation.Status.PENDING
+                    status='pending'
                 )
                 
-                if invitation.is_expired():
+                if timezone.now() > invitation.expires_at:
                     return Response({
                         'message': 'Invitation has expired'
                     }, status=status.HTTP_400_BAD_REQUEST)
@@ -111,11 +111,11 @@ class EmployeeSignupView(APIView):
                 phone_number=data.get('phoneNumber', ''),
                 company=invitation.company,
                 role=invitation.role,
-                status=User.Status.ACTIVE
+                status='active'
             )
             
             # Mark invitation as accepted
-            invitation.status = Invitation.Status.ACCEPTED
+            invitation.status = 'accepted'
             invitation.accepted_at = timezone.now()
             invitation.accepted_by = user
             invitation.save()
@@ -159,7 +159,14 @@ class LoginView(APIView):
                 token, created = Token.objects.get_or_create(user=user)
                 
                 # Create refresh token
-                refresh_token = RefreshToken.create_for_user(user)
+                # Deactivate existing refresh tokens for this user
+                RefreshToken.objects.filter(user=user, is_active=True).update(is_active=False)
+                
+                # Create new refresh token (expires in 30 days)
+                refresh_token = RefreshToken.objects.create(
+                    user=user,
+                    expires_at=timezone.now() + timedelta(days=30)
+                )
                 
                 return Response({
                     'message': 'Login successful',
@@ -189,10 +196,10 @@ class VerifyInvitationView(APIView):
             try:
                 invitation = Invitation.objects.select_related('company').get(
                     token=token,
-                    status=Invitation.Status.PENDING
+                    status='pending'
                 )
                 
-                if invitation.is_expired():
+                if timezone.now() > invitation.expires_at:
                     return Response({
                         'message': 'Invitation has expired'
                     }, status=status.HTTP_400_BAD_REQUEST)
@@ -237,7 +244,7 @@ class RefreshTokenView(APIView):
                     is_active=True
                 )
                 
-                if refresh_token.is_expired():
+                if timezone.now() > refresh_token.expires_at:
                     refresh_token.is_active = False
                     refresh_token.save()
                     return Response({
@@ -248,7 +255,14 @@ class RefreshTokenView(APIView):
                 access_token, created = Token.objects.get_or_create(user=refresh_token.user)
                 
                 # Optionally create new refresh token (rotate refresh tokens)
-                new_refresh_token = RefreshToken.create_for_user(refresh_token.user)
+                # Deactivate existing refresh tokens for this user
+                RefreshToken.objects.filter(user=refresh_token.user, is_active=True).update(is_active=False)
+                
+                # Create new refresh token (expires in 30 days)
+                new_refresh_token = RefreshToken.objects.create(
+                    user=refresh_token.user,
+                    expires_at=timezone.now() + timedelta(days=30)
+                )
                 
                 return Response({
                     'message': 'Token refreshed successfully',
@@ -311,7 +325,7 @@ class SendInvitationView(APIView):
     def post(self, request):
         try:
             # Check if user is admin
-            if not request.user.is_company_admin():
+            if request.user.role != 'company_admin':
                 return Response({
                     'message': 'Permission denied. Only company admins can send invitations.'
                 }, status=status.HTTP_403_FORBIDDEN)
@@ -322,10 +336,10 @@ class SendInvitationView(APIView):
             existing_invitation = Invitation.objects.filter(
                 company=request.user.company,
                 email_address=email_address,
-                status=Invitation.Status.PENDING
+                status='pending'
             ).first()
             
-            if existing_invitation and not existing_invitation.is_expired():
+            if existing_invitation and timezone.now() <= existing_invitation.expires_at:
                 return Response({
                     'message': 'Invitation already sent to this email'
                 }, status=status.HTTP_400_BAD_REQUEST)
@@ -388,14 +402,14 @@ class GetEmployeesView(APIView):
     
     def get(self, request):
         try:
-            if not request.user.is_company_admin():
+            if request.user.role != 'company_admin':
                 return Response({
                     'message': 'Permission denied'
                 }, status=status.HTTP_403_FORBIDDEN)
             
             employees = User.objects.filter(
                 company=request.user.company,
-                role=User.Role.EMPLOYEE
+                role='employee'
             ).select_related('company')
             
             return Response({
@@ -414,7 +428,7 @@ class GetInvitationsView(APIView):
     
     def get(self, request):
         try:
-            if not request.user.is_company_admin():
+            if request.user.role != 'company_admin':
                 return Response({
                     'message': 'Permission denied'
                 }, status=status.HTTP_403_FORBIDDEN)
@@ -439,7 +453,7 @@ class ResendInvitationView(APIView):
     
     def post(self, request, invitation_id):
         try:
-            if not request.user.is_company_admin():
+            if request.user.role != 'company_admin':
                 return Response({
                     'message': 'Permission denied. Only company admins can resend invitations.'
                 }, status=status.HTTP_403_FORBIDDEN)
@@ -454,12 +468,12 @@ class ResendInvitationView(APIView):
                     'message': 'Invitation not found'
                 }, status=status.HTTP_404_NOT_FOUND)
             
-            if invitation.status != Invitation.Status.PENDING:
+            if invitation.status != 'pending':
                 return Response({
                     'message': 'Can only resend pending invitations'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-            if invitation.is_expired():
+            if timezone.now() > invitation.expires_at:
                 return Response({
                     'message': 'Cannot resend expired invitation'
                 }, status=status.HTTP_400_BAD_REQUEST)
