@@ -7,40 +7,88 @@
 # =============================================================================
 # CRITICAL SECURITY - ENVIRONMENT & CREDENTIALS (NEVER COMMIT)
 # =============================================================================
-# Environment files (all possible variations)
+# Environment files (ALL POSSIBLE VARIATIONS - MAXIMUM PROTECTION)
 .env
 .env.*
 *.env
 .env.local
+.env.dev
 .env.development
+.env.prod
 .env.production
 .env.staging
 .env.test
+.env.testing
 .envrc
+.environment
+environment
+.environ
+environ
+.config
 
-# Specific frontend .env files
+# Root level environment files
+/.env
+/.env.*
+/*env*
+
+# Frontend environment files (COMPREHENSIVE)
 frontend/.env
 frontend/.env.*
 frontend/*.env
+frontend/.environment
+frontend/environment.*
+frontend/.config
+frontend/config.*
 
-# Backend environment files
-backend/**/.env*
+# Backend environment files (COMPREHENSIVE)
+backend/.env
+backend/.env.*
+backend/*.env
+backend/**/.env
+backend/**/.env.*
+backend/**/*.env
 backend/**/local_settings.py
 backend/**/secrets.py
 backend/**/config.py
+backend/**/.environment
+backend/**/environment.*
+backend/**/.config
+backend/**/config.*
 
-# Frontend environment files (all variations)
-frontend/**/.env*
-frontend/**/environment.*
+# Django-specific environment files
+backend/**/settings_local.py
+backend/**/local_config.py
+backend/**/private_settings.py
+backend/**/*_secrets.py
+backend/**/*_credentials.py
 
-# API Keys and credentials (any format)
+# Any environment or config files anywhere
+**/.env
+**/.env.*
+**/*.env
+**/env.*
+**/*env*
+**/.environment
+**/environment.*
+**/.config
+**/config.*
+
+# API Keys and credentials (COMPREHENSIVE)
 **/api_keys.*
+**/apikeys.*
+**/api-keys.*
 **/credentials.*
 **/secrets.*
 **/config/secrets.*
 **/*secret*
 **/*credential*
 **/*token*
+**/*api_key*
+**/*apikey*
+**/*auth*
+**/*oauth*
+**/keys.*
+**/private.*
 
 # Google/Gmail API credentials
 **/client_secret*.json
